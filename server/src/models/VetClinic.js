@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 
 const vetClinicSchema = new mongoose.Schema(
   {
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
     clinicName: {
       type: String,
       required: true,
@@ -22,9 +27,16 @@ const vetClinicSchema = new mongoose.Schema(
       default: [],
     },
     workingHours: {
-      type: String,
-      required: true,
-      trim: true,
+      openTime: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      closeTime: {
+        type: String,
+        required: true,
+        trim: true,
+      },
     },
     consultationFee: {
       type: Number,
@@ -38,14 +50,30 @@ const vetClinicSchema = new mongoose.Schema(
       max: 5,
     },
     location: {
-      type: String,
-      default: '',
-      trim: true,
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number],
+        required: true,
+        validate: {
+          validator(value) {
+            return Array.isArray(value) && value.length === 2;
+          },
+          message: 'Location coordinates must be [longitude, latitude]',
+        },
+      },
     },
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
+
+vetClinicSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('VetClinic', vetClinicSchema);
