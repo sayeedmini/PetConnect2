@@ -1,7 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const { createReport } = require("../controllers/reportcontroller");
+const {
+  createReport,
+  getOpenReports,
+  getAcceptedReports,
+  acceptReport,
+  rejectReport,
+  completeReport,
+} = require("../controllers/reportcontroller");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -15,5 +22,10 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.post("/", upload.array("media"), createReport);
+router.get("/open", getOpenReports);
+router.get("/accepted", getAcceptedReports);
+router.patch("/:rescueId/accept", acceptReport);
+router.patch("/:rescueId/reject", rejectReport);
+router.patch("/:rescueId/complete", completeReport);
 
 module.exports = router;
