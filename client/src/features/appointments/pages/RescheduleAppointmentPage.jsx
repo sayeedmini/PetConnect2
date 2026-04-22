@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import {
-  getAppointmentById,
-  getAvailableSlots,
-  rescheduleAppointment,
-} from '../services/appointmentApi';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getAppointmentById, getAvailableSlots, rescheduleAppointment } from '../services/appointmentApi';
 import AppointmentSlotPicker from '../components/AppointmentSlotPicker';
+import SiteLayout from '../../../components/SiteLayout';
+import { formatDateInputValue, formatFriendlyDate } from '../../../utils/date';
 
 function RescheduleAppointmentPage() {
   const { appointmentId } = useParams();
@@ -38,12 +36,12 @@ function RescheduleAppointmentPage() {
   useEffect(() => {
     const fetchSlots = async () => {
       if (!appointment?.clinic?._id || !selectedDate) return;
-
       setLoadingSlots(true);
       setSelectedSlot(null);
-
       try {
-        const response = await getAvailableSlots(appointment.clinic._id, selectedDate);
+        const response = await getAvailableSlots(appointment.clinic._id, selectedDate, {
+          excludeAppointmentId: appointmentId,
+        });
         setSlots(response.slots || []);
       } catch (error) {
         alert(error?.response?.data?.message || 'Failed to load slots');
@@ -55,24 +53,21 @@ function RescheduleAppointmentPage() {
     };
 
     fetchSlots();
-  }, [appointment, selectedDate]);
+  }, [appointment, appointmentId, selectedDate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!selectedSlot) {
       alert('Please select a new slot');
       return;
     }
 
     setSaving(true);
-
     try {
       await rescheduleAppointment(appointmentId, {
         appointmentDate: selectedDate,
         startTime: selectedSlot.startTime,
       });
-
       alert('Appointment rescheduled successfully');
       navigate('/appointments');
     } catch (error) {
@@ -84,62 +79,85 @@ function RescheduleAppointmentPage() {
   };
 
   if (loadingAppointment) {
-    return <div style={{ padding: '30px' }}><p>Loading appointment...</p></div>;
+    return (
+      <SiteLayout compact backTo="/appointments" backLabel="Back to appointments" title="Reschedule appointment" subtitle="Loading appointment information...">
+        <div className="card"><div className="card-body helper-text">Loading appointment...</div></div>
+      </SiteLayout>
+    );
   }
 
   if (!appointment) {
-    return <div style={{ padding: '30px' }}><p>Appointment not found.</p></div>;
+    return (
+      <SiteLayout compact backTo="/appointments" backLabel="Back to appointments" title="Appointment not found" subtitle="The selected appointment could not be loaded.">
+        <div className="card"><div className="card-body empty-state">Appointment not found.</div></div>
+      </SiteLayout>
+    );
   }
 
   return (
-    <div style={{ padding: '30px' }}>
-      <Link to="/appointments">← Back to My Appointments</Link>
+    <SiteLayout
+      compact
+      backTo="/appointments"
+      backLabel="Back to appointments"
+      eyebrow="Reschedule booking"
+      title="Choose a better date and time"
+      subtitle={`Update your appointment with ${appointment.clinic?.clinicName || 'the clinic'} using the repaired slot picker.`}
+    >
+      <section className="booking-layout">
+        <form onSubmit={handleSubmit} className="form-card">
+          <div className="form-grid">
+            <div className="form-group form-full">
+              <label>New date</label>
+              <input
+                type="date"
+                value={selectedDate}
+                min={formatDateInputValue()}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                required
+              />
+            </div>
 
-      <h1 style={{ marginTop: '14px' }}>Reschedule Appointment</h1>
-      <p><strong>Clinic:</strong> {appointment.clinic?.clinicName}</p>
-      <p><strong>Current Slot:</strong> {appointment.appointmentDate} | {appointment.slotLabel}</p>
+            <div className="form-full slot-panel card">
+              <h3 className="section-title">Select a new slot</h3>
+              <p className="helper-text">Choose one of the currently available time slots for the selected date.</p>
+              <AppointmentSlotPicker
+                slots={slots}
+                selectedSlotId={selectedSlot?.id}
+                onSelect={setSelectedSlot}
+                loading={loadingSlots}
+              />
+              {selectedSlot && (
+                <p className="slot-selection-note">
+                  Selected slot: <strong>{selectedSlot.label}</strong>
+                </p>
+              )}
+            </div>
 
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <label>
-          New Date
-          <input
-            type="date"
-            value={selectedDate}
-            min={new Date().toISOString().slice(0, 10)}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            required
-          />
-        </label>
+            <div className="form-full toolbar">
+              <button type="submit" className="btn btn-primary" disabled={saving}>
+                {saving ? 'Updating appointment...' : 'Confirm reschedule'}
+              </button>
+            </div>
+          </div>
+        </form>
 
-        <div style={styles.slotSection}>
-          <h3>Select new slot</h3>
-          <AppointmentSlotPicker
-            slots={slots}
-            selectedStartTime={selectedSlot?.startTime}
-            onSelect={setSelectedSlot}
-            loading={loadingSlots}
-          />
+        <div className="side-stack">
+          <div className="card summary-card">
+            <strong>Current clinic</strong>
+            <span>{appointment.clinic?.clinicName}</span>
+          </div>
+          <div className="card summary-card">
+            <strong>Current slot</strong>
+            <span>{formatFriendlyDate(appointment.appointmentDate)} · {appointment.slotLabel}</span>
+          </div>
+          <div className="card summary-card">
+            <strong>Pet</strong>
+            <span>{appointment.petName} · {appointment.petType || 'Not specified'}</span>
+          </div>
         </div>
-
-        <button type="submit" disabled={saving}>
-          {saving ? 'Updating appointment...' : 'Confirm Reschedule'}
-        </button>
-      </form>
-    </div>
+      </section>
+    </SiteLayout>
   );
 }
-
-const styles = {
-  form: {
-    display: 'grid',
-    gap: '16px',
-    maxWidth: '760px',
-  },
-  slotSection: {
-    background: '#f8fafc',
-    borderRadius: '12px',
-    padding: '16px',
-  },
-};
 
 export default RescheduleAppointmentPage;

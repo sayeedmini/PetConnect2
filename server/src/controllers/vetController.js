@@ -38,7 +38,6 @@ const convertClinicPayload = (body) => {
       closeTime: body.closeTime,
     },
     consultationFee: Number(body.consultationFee),
-    rating: Number(body.rating || 0),
     ...(location ? { location } : {}),
   };
 };

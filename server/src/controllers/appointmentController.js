@@ -1,6 +1,9 @@
 const Appointment = require('../models/Appointment');
 const VetClinic = require('../models/VetClinic');
-const { syncAppointmentToGoogleCalendar } = require('../services/googleCalendarService');
+const {
+  syncAppointmentToGoogleCalendar,
+  removeAppointmentFromGoogleCalendar,
+} = require('../services/googleCalendarService');
 
 const SLOT_DURATION_MINUTES = 30;
 
@@ -42,6 +45,13 @@ const overlapQuery = (clinicId, startTime, endTime, excludeAppointmentId = null)
   return query;
 };
 
+const serializeSlot = ({ label, startTime, endTime }) => ({
+  id: startTime.toISOString(),
+  label,
+  startTime: startTime.toISOString(),
+  endTime: endTime.toISOString(),
+});
+
 const generateAvailableSlots = async ({ clinic, dateValue, excludeAppointmentId = null }) => {
   const openMinutes = parseMinutes(clinic?.workingHours?.openTime);
   const closeMinutes = parseMinutes(clinic?.workingHours?.closeTime);
@@ -78,11 +88,13 @@ const generateAvailableSlots = async ({ clinic, dateValue, excludeAppointmentId 
     });
 
     if (!isBooked) {
-      slots.push({
-        label: createSlotLabel(slotStartMinutes, slotEndMinutes),
-        startTime,
-        endTime,
-      });
+      slots.push(
+        serializeSlot({
+          label: createSlotLabel(slotStartMinutes, slotEndMinutes),
+          startTime,
+          endTime,
+        })
+      );
     }
   }
 
@@ -97,7 +109,7 @@ const populateAppointmentQuery = (query) =>
 
 const getAvailableSlots = async (req, res) => {
   try {
-    const { clinicId, date } = req.query;
+    const { clinicId, date, excludeAppointmentId } = req.query;
 
     if (!clinicId || !date) {
       return res.status(400).json({
@@ -122,7 +134,11 @@ const getAvailableSlots = async (req, res) => {
       });
     }
 
-    const slots = await generateAvailableSlots({ clinic, dateValue: date });
+    const slots = await generateAvailableSlots({
+      clinic,
+      dateValue: date,
+      excludeAppointmentId: excludeAppointmentId || null,
+    });
 
     return res.status(200).json({
       success: true,
@@ -190,9 +206,7 @@ const createAppointment = async (req, res) => {
       dateValue: appointmentDate,
     });
 
-    const selectedSlot = availableSlots.find(
-      (slot) => new Date(slot.startTime).toISOString() === new Date(selectedStartTime).toISOString()
-    );
+    const selectedSlot = availableSlots.find((slot) => slot.startTime === selectedStartTime);
 
     if (!selectedSlot) {
       return res.status(409).json({
@@ -201,8 +215,11 @@ const createAppointment = async (req, res) => {
       });
     }
 
+    const selectedSlotStartTime = new Date(selectedSlot.startTime);
+    const selectedSlotEndTime = new Date(selectedSlot.endTime);
+
     const clash = await Appointment.findOne(
-      overlapQuery(clinic._id, selectedSlot.startTime, selectedSlot.endTime)
+      overlapQuery(clinic._id, selectedSlotStartTime, selectedSlotEndTime)
     );
 
     if (clash) {
@@ -222,9 +239,9 @@ const createAppointment = async (req, res) => {
       notes,
       appointmentDate,
       slotLabel: selectedSlot.label,
-      startTime: selectedSlot.startTime,
-      endTime: selectedSlot.endTime,
-      reminderAt: new Date(new Date(selectedSlot.startTime).getTime() - 24 * 60 * 60 * 1000),
+      startTime: selectedSlotStartTime,
+      endTime: selectedSlotEndTime,
+      reminderAt: new Date(selectedSlotStartTime.getTime() - 24 * 60 * 60 * 1000),
     });
 
     const calendarSync = await syncAppointmentToGoogleCalendar({
@@ -357,8 +374,17 @@ const cancelAppointment = async (req, res) => {
       });
     }
 
+    const clinic = await VetClinic.findById(appointment.clinic).select('clinicName address');
+
     appointment.status = 'cancelled';
     appointment.cancelledBy = isAdmin ? 'admin' : isClinicOwner ? 'vet' : 'petOwner';
+
+    const calendarSync = await removeAppointmentFromGoogleCalendar({
+      appointment,
+      clinic,
+    });
+
+    appointment.calendarSync = calendarSync;
     await appointment.save();
 
     const populatedAppointment = await populateAppointmentQuery(
@@ -438,9 +464,7 @@ const rescheduleAppointment = async (req, res) => {
       excludeAppointmentId: appointment._id,
     });
 
-    const selectedSlot = availableSlots.find(
-      (slot) => new Date(slot.startTime).toISOString() === new Date(selectedStartTime).toISOString()
-    );
+    const selectedSlot = availableSlots.find((slot) => slot.startTime === selectedStartTime);
 
     if (!selectedSlot) {
       return res.status(409).json({
@@ -449,8 +473,11 @@ const rescheduleAppointment = async (req, res) => {
       });
     }
 
+    const selectedSlotStartTime = new Date(selectedSlot.startTime);
+    const selectedSlotEndTime = new Date(selectedSlot.endTime);
+
     const clash = await Appointment.findOne(
-      overlapQuery(clinic._id, selectedSlot.startTime, selectedSlot.endTime, appointment._id)
+      overlapQuery(clinic._id, selectedSlotStartTime, selectedSlotEndTime, appointment._id)
     );
 
     if (clash) {
@@ -462,11 +489,9 @@ const rescheduleAppointment = async (req, res) => {
 
     appointment.appointmentDate = appointmentDate;
     appointment.slotLabel = selectedSlot.label;
-    appointment.startTime = selectedSlot.startTime;
-    appointment.endTime = selectedSlot.endTime;
-    appointment.reminderAt = new Date(
-      new Date(selectedSlot.startTime).getTime() - 24 * 60 * 60 * 1000
-    );
+    appointment.startTime = selectedSlotStartTime;
+    appointment.endTime = selectedSlotEndTime;
+    appointment.reminderAt = new Date(selectedSlotStartTime.getTime() - 24 * 60 * 60 * 1000);
 
     const calendarSync = await syncAppointmentToGoogleCalendar({
       appointment,

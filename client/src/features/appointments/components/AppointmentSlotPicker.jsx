@@ -1,53 +1,39 @@
-function AppointmentSlotPicker({ slots = [], selectedStartTime, onSelect, loading }) {
+function AppointmentSlotPicker({ slots = [], selectedSlotId, onSelect, loading }) {
   if (loading) {
-    return <p>Loading available slots...</p>;
+    return <p className="text-sm text-slate-500">Loading available slots...</p>;
   }
 
   if (slots.length === 0) {
-    return <p>No slots available for this date.</p>;
+    return <p className="text-sm text-slate-500">No slots available for this date.</p>;
   }
 
   return (
-    <div style={styles.grid}>
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="list" aria-label="Available appointment slots">
       {slots.map((slot) => {
-        const isActive = selectedStartTime === slot.startTime;
+        const isActive = selectedSlotId === slot.id;
 
         return (
           <button
-            key={slot.startTime}
+            key={slot.id}
             type="button"
             onClick={() => onSelect(slot)}
-            style={{
-              ...styles.slot,
-              ...(isActive ? styles.activeSlot : {}),
-            }}
+            className={[
+              'rounded-2xl border px-4 py-3 text-left transition',
+              isActive
+                ? 'border-emerald-700 bg-emerald-700 text-white shadow-[0_18px_40px_rgba(4,120,87,0.22)]'
+                : 'border-slate-300 bg-white text-slate-700 hover:border-teal-300 hover:bg-teal-50',
+            ].join(' ')}
+            aria-pressed={isActive}
           >
-            {slot.label}
+            <div className="text-xl font-semibold">{slot.label}</div>
+            <div className={`mt-1 text-xs font-medium ${isActive ? 'text-emerald-100' : 'text-slate-500'}`}>
+              {isActive ? 'Selected slot' : 'Tap to choose'}
+            </div>
           </button>
         );
       })}
     </div>
   );
 }
-
-const styles = {
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-    gap: '10px',
-  },
-  slot: {
-    padding: '12px',
-    borderRadius: '12px',
-    border: '1px solid #d1d5db',
-    background: '#fff',
-    cursor: 'pointer',
-    fontWeight: 600,
-  },
-  activeSlot: {
-    background: '#dbeafe',
-    borderColor: '#2563eb',
-  },
-};
 
 export default AppointmentSlotPicker;

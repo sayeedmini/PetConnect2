@@ -1,14 +1,26 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { deleteVet, getVetById } from '../services/vetApi';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import SiteLayout from '../../../components/SiteLayout';
 import { getUser } from '../../auth/utils/auth';
+import ClinicReviewsPanel from '../../reviews/components/ClinicReviewsPanel';
+import { deleteVet, getVetById } from '../services/vetApi';
+
+function StatBox({ label, value }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4">
+      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+        {label}
+      </div>
+      <div className="mt-2 text-base font-semibold text-[#002045]">{value}</div>
+    </div>
+  );
+}
 
 function VetDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [vet, setVet] = useState(null);
   const [loading, setLoading] = useState(true);
-
   const currentUser = getUser();
 
   useEffect(() => {
@@ -27,8 +39,7 @@ function VetDetailsPage() {
   }, [id]);
 
   const handleDelete = async () => {
-    const confirmed = window.confirm('Delete this clinic?');
-    if (!confirmed) return;
+    if (!window.confirm('Delete this clinic?')) return;
 
     try {
       await deleteVet(id);
@@ -40,55 +51,188 @@ function VetDetailsPage() {
     }
   };
 
-  if (loading) return <div style={{ padding: '30px' }}><p>Loading clinic details...</p></div>;
-  if (!vet) return <div style={{ padding: '30px' }}><p>Vet clinic not found.</p></div>;
+  const handleReviewStatsChange = useCallback(({ rating, totalReviews }) => {
+    setVet((prev) => {
+      if (!prev) return prev;
 
-  const mapUrl = `https://maps.google.com/maps?q=${vet.latitude},${vet.longitude}&z=15&output=embed`;
-  const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    `${vet.latitude},${vet.longitude}`
-  )}`;
+      if (prev.rating === rating && prev.totalReviews === totalReviews) {
+        return prev;
+      }
+
+      return { ...prev, rating, totalReviews };
+    });
+  }, []);
+
+  const mapUrl = useMemo(() => {
+    if (!vet?.latitude || !vet?.longitude) return '';
+    return `https://maps.google.com/maps?q=${vet.latitude},${vet.longitude}&z=15&output=embed`;
+  }, [vet?.latitude, vet?.longitude]);
+
+  if (loading) {
+    return (
+      <SiteLayout
+        compact
+        backTo="/vets"
+        backLabel="Back to clinics"
+        title="Clinic details"
+        subtitle="Loading clinic information..."
+      >
+        <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-slate-600 shadow-sm">
+          Loading clinic details...
+        </div>
+      </SiteLayout>
+    );
+  }
+
+  if (!vet) {
+    return (
+      <SiteLayout
+        compact
+        backTo="/vets"
+        backLabel="Back to clinics"
+        title="Clinic not found"
+        subtitle="The selected clinic could not be loaded."
+      >
+        <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-slate-600 shadow-sm">
+          Vet clinic not found.
+        </div>
+      </SiteLayout>
+    );
+  }
 
   const isOwner = currentUser?._id === vet?.owner?._id;
   const isAdmin = currentUser?.role === 'admin';
   const canManage = isOwner || isAdmin;
   const canBook = currentUser && ['petOwner', 'admin'].includes(currentUser.role);
+  const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    `${vet.latitude},${vet.longitude}`
+  )}`;
 
   return (
-    <div style={{ padding: '30px' }}>
-      <Link to="/vets">← Back to Vet Clinics</Link>
+    <SiteLayout
+      compact
+      backTo="/vets"
+      backLabel="Back to clinics"
+      eyebrow="Clinic details"
+      title={vet.clinicName}
+      subtitle="Review clinic information, map location, services, and verified owner reviews in one place."
+      actions={
+        <>
+          <a
+            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-[#002045] transition hover:border-slate-400 hover:bg-slate-50"
+            href={googleMapsLink}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Open in Google Maps
+          </a>
+          {canBook && (
+            <Link
+              className="rounded-xl bg-[#002045] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1A365D]"
+              to={`/vets/${vet._id}/book`}
+            >
+              Book appointment
+            </Link>
+          )}
+          {canManage && (
+            <Link
+              className="rounded-xl border border-teal-300 bg-teal-50 px-4 py-2.5 text-sm font-semibold text-teal-800 transition hover:bg-teal-100"
+              to={`/vets/${vet._id}/edit`}
+            >
+              Edit clinic
+            </Link>
+          )}
+          {canManage && (
+            <button
+              type="button"
+              className="rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-700"
+              onClick={handleDelete}
+            >
+              Delete
+            </button>
+          )}
+        </>
+      }
+    >
+      <div className="grid gap-8 xl:grid-cols-[1fr_360px]">
+        <div className="space-y-6">
+          <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <StatBox label="Status" value={vet.isOpenNow ? 'Open now' : 'Closed now'} />
+              <StatBox label="Consultation fee" value={`৳ ${vet.consultationFee}`} />
+              <StatBox label="Contact" value={vet.contactNumber} />
+              <StatBox
+                label="Rating"
+                value={`${vet.rating ?? 'N/A'} / 5 ${
+                  vet.totalReviews ? `(${vet.totalReviews} reviews)` : ''
+                }`}
+              />
+              <StatBox
+                label="Working hours"
+                value={`${vet.workingHours?.openTime} - ${vet.workingHours?.closeTime}`}
+              />
+              <StatBox label="Coordinates" value={`${vet.latitude}, ${vet.longitude}`} />
+            </div>
+          </section>
 
-      <h1 style={{ marginTop: '14px' }}>{vet.clinicName}</h1>
+          <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+            <h2 className="font-display text-3xl font-bold text-[#002045]">Clinic overview</h2>
+            <p className="mt-4 text-base leading-8 text-slate-600">{vet.address}</p>
+            <div className="mt-6 border-t border-slate-200 pt-6">
+              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                Services offered
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {vet.servicesOffered?.length ? (
+                  vet.servicesOffered.map((service, index) => (
+                    <span
+                      key={index}
+                      className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
+                    >
+                      {service}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-slate-500">No services specified</span>
+                )}
+              </div>
+            </div>
+          </section>
 
-      <p><strong>Status:</strong> {vet.isOpenNow ? 'Open now' : 'Closed now'}</p>
-      <p><strong>Address:</strong> {vet.address}</p>
-      <p><strong>Contact:</strong> {vet.contactNumber}</p>
-      <p><strong>Working Hours:</strong> {vet.workingHours?.openTime} - {vet.workingHours?.closeTime}</p>
-      <p><strong>Consultation Fee:</strong> ৳{vet.consultationFee}</p>
-      <p><strong>Rating:</strong> {vet.rating}</p>
-      <p><strong>Services:</strong> {vet.servicesOffered?.join(', ') || 'Not specified'}</p>
-      <p><strong>Coordinates:</strong> {vet.latitude}, {vet.longitude}</p>
+          <ClinicReviewsPanel clinicId={vet._id} onReviewStatsChange={handleReviewStatsChange} />
+        </div>
 
-      {vet.owner && (
-        <p>
-          <strong>Owner:</strong> {vet.owner.name} ({vet.owner.email})
-        </p>
-      )}
+        <aside className="space-y-6 xl:sticky xl:top-28 xl:self-start">
+          {vet.owner && (
+            <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+              <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Clinic owner
+              </div>
+              <div className="mt-4 font-display text-3xl font-bold text-[#002045]">
+                {vet.owner.name}
+              </div>
+              <p className="mt-2 text-sm text-slate-600">{vet.owner.email}</p>
+            </div>
+          )}
 
-      <iframe
-        title="vet-map"
-        src={mapUrl}
-        style={{ width: '100%', height: '340px', border: 0, borderRadius: '14px', marginTop: '12px' }}
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-      />
-
-      <div style={{ display: 'flex', gap: '14px', marginTop: '18px', flexWrap: 'wrap' }}>
-        <a href={googleMapsLink} target="_blank" rel="noreferrer">Open in Google Maps</a>
-        {canBook && <Link to={`/vets/${vet._id}/book`}>Book Appointment</Link>}
-        {canManage && <Link to={`/vets/${vet._id}/edit`}>Edit Clinic</Link>}
-        {canManage && <button onClick={handleDelete}>Delete Clinic</button>}
+          <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+            {mapUrl ? (
+              <iframe
+                title="vet-map"
+                src={mapUrl}
+                className="h-[420px] w-full border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            ) : (
+              <div className="flex h-[420px] items-center justify-center bg-slate-100 text-slate-500">
+                Map preview is not available for this clinic.
+              </div>
+            )}
+          </div>
+        </aside>
       </div>
-    </div>
+    </SiteLayout>
   );
 }
 

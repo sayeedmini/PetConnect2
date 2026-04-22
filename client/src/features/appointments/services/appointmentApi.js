@@ -13,9 +13,13 @@ const getAuthHeaders = () => {
     : {};
 };
 
-export const getAvailableSlots = async (clinicId, date) => {
+export const getAvailableSlots = async (clinicId, date, options = {}) => {
   const response = await axios.get(`${API_BASE_URL}/available-slots`, {
-    params: { clinicId, date },
+    params: {
+      clinicId,
+      date,
+      ...(options.excludeAppointmentId ? { excludeAppointmentId: options.excludeAppointmentId } : {}),
+    },
     headers: getAuthHeaders(),
   });
 

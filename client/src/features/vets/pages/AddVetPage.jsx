@@ -1,15 +1,21 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import VetForm from '../components/VetForm';
+import SiteLayout from '../../../components/SiteLayout';
 
 function AddVetPage() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ padding: '30px' }}>
-      <Link to="/vets">← Back to Vet Clinics</Link>
-      <h1 style={{ marginTop: '14px' }}>Add Vet Clinic</h1>
+    <SiteLayout
+      compact
+      backTo="/vets"
+      backLabel="Back to vet clinics"
+      eyebrow="Clinic management"
+      title="Add a new veterinary clinic"
+      subtitle="Create a professional clinic listing with clear location, schedule, and service details."
+    >
       <VetForm onSuccess={(newVet) => navigate(`/vets/${newVet._id}`)} />
-    </div>
+    </SiteLayout>
   );
 }
 

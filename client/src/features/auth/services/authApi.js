@@ -1,22 +1,37 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api/auth';
+const API = axios.create({
+  baseURL: 'http://localhost:5000/api/auth',
+});
 
-export const registerUser = async (userData) => {
-  const response = await axios.post(`${API_BASE_URL}/register`, userData);
-  return response.data;
+export const registerUser = async (formData) => {
+  const payload = {
+    name: formData.name,
+    email: formData.email,
+    password: formData.password,
+  };
+
+  const { data } = await API.post('/register', payload);
+  return data;
 };
 
-export const loginUser = async (userData) => {
-  const response = await axios.post(`${API_BASE_URL}/login`, userData);
-  return response.data;
+export const loginUser = async (formData) => {
+  const payload = {
+    email: formData.email,
+    password: formData.password,
+  };
+
+  const { data } = await API.post('/login', payload);
+  return data;
 };
 
-export const getMyProfile = async (token) => {
-  const response = await axios.get(`${API_BASE_URL}/me`, {
+export const getMe = async (token) => {
+  const { data } = await API.get('/me', {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
-  return response.data;
+  return data;
 };
+
+export default API;

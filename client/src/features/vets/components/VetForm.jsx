@@ -1,19 +1,21 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import ClinicLocationPicker from './ClinicLocationPicker';
 import { createVet, updateVet } from '../services/vetApi';
 
+const emptyForm = {
+  clinicName: '',
+  address: '',
+  contactNumber: '',
+  servicesOffered: '',
+  openTime: '',
+  closeTime: '',
+  consultationFee: '',
+  latitude: '',
+  longitude: '',
+};
+
 function VetForm({ initialData = null, isEdit = false, onSuccess }) {
-  const [formData, setFormData] = useState({
-    clinicName: '',
-    address: '',
-    contactNumber: '',
-    servicesOffered: '',
-    openTime: '',
-    closeTime: '',
-    consultationFee: '',
-    rating: '',
-    latitude: '',
-    longitude: '',
-  });
+  const [formData, setFormData] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
 
@@ -29,17 +31,13 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
         openTime: initialData.workingHours?.openTime || '',
         closeTime: initialData.workingHours?.closeTime || '',
         consultationFee: initialData.consultationFee || '',
-        rating: initialData.rating || '',
         latitude: initialData.latitude || '',
         longitude: initialData.longitude || '',
       });
+    } else {
+      setFormData(emptyForm);
     }
   }, [initialData]);
-
-  const mapUrl = useMemo(() => {
-    if (!formData.latitude || !formData.longitude) return '';
-    return `https://maps.google.com/maps?q=${formData.latitude},${formData.longitude}&z=15&output=embed`;
-  }, [formData.latitude, formData.longitude]);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -47,6 +45,14 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
       [e.target.name]: e.target.value,
     }));
   };
+
+  const handleMapLocationSelect = useCallback((position) => {
+    setFormData((prev) => ({
+      ...prev,
+      latitude: position.lat.toFixed(6),
+      longitude: position.lng.toFixed(6),
+    }));
+  }, []);
 
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -58,11 +64,10 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setFormData((prev) => ({
-          ...prev,
-          latitude: position.coords.latitude.toFixed(6),
-          longitude: position.coords.longitude.toFixed(6),
-        }));
+        handleMapLocationSelect({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
         setLocationLoading(false);
       },
       (error) => {
@@ -75,6 +80,11 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (formData.latitude === '' || formData.longitude === '') {
+      alert('Please pick the clinic location from the map before saving');
+      return;
+    }
+
     const payload = {
       clinicName: formData.clinicName,
       address: formData.address,
@@ -86,7 +96,6 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
       openTime: formData.openTime,
       closeTime: formData.closeTime,
       consultationFee: Number(formData.consultationFee),
-      rating: Number(formData.rating || 0),
       latitude: Number(formData.latitude),
       longitude: Number(formData.longitude),
     };
@@ -94,33 +103,19 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
     setSubmitting(true);
 
     try {
-      let response;
+      const response =
+        isEdit && initialData?._id
+          ? await updateVet(initialData._id, payload)
+          : await createVet(payload);
 
-      if (isEdit && initialData?._id) {
-        response = await updateVet(initialData._id, payload);
-        alert('Vet clinic updated successfully');
-      } else {
-        response = await createVet(payload);
-        alert('Vet clinic added successfully');
-      }
+      alert(isEdit ? 'Vet clinic updated successfully' : 'Vet clinic added successfully');
 
       if (onSuccess) {
         onSuccess(response.data);
       }
 
       if (!isEdit) {
-        setFormData({
-          clinicName: '',
-          address: '',
-          contactNumber: '',
-          servicesOffered: '',
-          openTime: '',
-          closeTime: '',
-          consultationFee: '',
-          rating: '',
-          latitude: '',
-          longitude: '',
-        });
+        setFormData(emptyForm);
       }
     } catch (error) {
       alert(error?.response?.data?.message || 'Failed to save vet clinic');
@@ -131,158 +126,193 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={styles.form}>
-      <input
-        name="clinicName"
-        placeholder="Clinic Name"
-        value={formData.clinicName}
-        onChange={handleChange}
-        required
-      />
+    <div className="grid gap-8 xl:grid-cols-[1fr_340px]">
+      <form
+        onSubmit={handleSubmit}
+        className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] lg:p-8"
+      >
+        <div className="grid gap-5 md:grid-cols-2">
+          <label className="block md:col-span-2">
+            <span className="mb-2 block text-sm font-semibold text-slate-700">Clinic name</span>
+            <input
+              name="clinicName"
+              placeholder="Happy Paws Veterinary Center"
+              value={formData.clinicName}
+              onChange={handleChange}
+              required
+              className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 outline-none transition focus:border-teal-400 focus:bg-white"
+            />
+          </label>
 
-      <input
-        name="address"
-        placeholder="Address"
-        value={formData.address}
-        onChange={handleChange}
-        required
-      />
+          <label className="block md:col-span-2">
+            <span className="mb-2 block text-sm font-semibold text-slate-700">Address</span>
+            <input
+              name="address"
+              placeholder="Full clinic address"
+              value={formData.address}
+              onChange={handleChange}
+              required
+              className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 outline-none transition focus:border-teal-400 focus:bg-white"
+            />
+          </label>
 
-      <input
-        name="contactNumber"
-        placeholder="Contact Number"
-        value={formData.contactNumber}
-        onChange={handleChange}
-        required
-      />
+          <label className="block">
+            <span className="mb-2 block text-sm font-semibold text-slate-700">Contact number</span>
+            <input
+              name="contactNumber"
+              placeholder="01XXXXXXXXX"
+              value={formData.contactNumber}
+              onChange={handleChange}
+              required
+              className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 outline-none transition focus:border-teal-400 focus:bg-white"
+            />
+          </label>
 
-      <input
-        name="servicesOffered"
-        placeholder="Services (comma separated)"
-        value={formData.servicesOffered}
-        onChange={handleChange}
-      />
+          <label className="block">
+            <span className="mb-2 block text-sm font-semibold text-slate-700">Consultation fee</span>
+            <input
+              name="consultationFee"
+              type="number"
+              placeholder="500"
+              value={formData.consultationFee}
+              onChange={handleChange}
+              required
+              className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 outline-none transition focus:border-teal-400 focus:bg-white"
+            />
+          </label>
 
-      <div style={styles.timeRow}>
-        <input
-          name="openTime"
-          type="time"
-          value={formData.openTime}
-          onChange={handleChange}
-          required
-        />
+          <label className="block md:col-span-2">
+            <span className="mb-2 block text-sm font-semibold text-slate-700">Services offered</span>
+            <input
+              name="servicesOffered"
+              placeholder="Vaccination, Surgery, Emergency Care"
+              value={formData.servicesOffered}
+              onChange={handleChange}
+              className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 outline-none transition focus:border-teal-400 focus:bg-white"
+            />
+          </label>
 
-        <input
-          name="closeTime"
-          type="time"
-          value={formData.closeTime}
-          onChange={handleChange}
-          required
-        />
-      </div>
+          <label className="block">
+            <span className="mb-2 block text-sm font-semibold text-slate-700">Opening time</span>
+            <input
+              name="openTime"
+              type="time"
+              value={formData.openTime}
+              onChange={handleChange}
+              required
+              className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 outline-none transition focus:border-teal-400 focus:bg-white"
+            />
+          </label>
 
-      <div style={styles.timeRow}>
-        <input
-          name="consultationFee"
-          type="number"
-          placeholder="Consultation Fee"
-          value={formData.consultationFee}
-          onChange={handleChange}
-          required
-        />
+          <label className="block">
+            <span className="mb-2 block text-sm font-semibold text-slate-700">Closing time</span>
+            <input
+              name="closeTime"
+              type="time"
+              value={formData.closeTime}
+              onChange={handleChange}
+              required
+              className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-700 outline-none transition focus:border-teal-400 focus:bg-white"
+            />
+          </label>
 
-        <input
-          name="rating"
-          type="number"
-          step="0.1"
-          min="0"
-          max="5"
-          placeholder="Rating"
-          value={formData.rating}
-          onChange={handleChange}
-        />
-      </div>
+          <div className="md:col-span-2 rounded-[24px] bg-slate-50 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-[#002045]">Clinic location</div>
+                <div className="mt-1 text-sm text-slate-600">
+                  Click directly on the map to save the clinic coordinates.
+                </div>
+              </div>
+              <button
+                type="button"
+                className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                onClick={handleUseCurrentLocation}
+                disabled={locationLoading}
+              >
+                {locationLoading ? 'Getting current location...' : 'Use current location'}
+              </button>
+            </div>
 
-      <div style={styles.timeRow}>
-        <input
-          name="latitude"
-          type="number"
-          step="any"
-          placeholder="Latitude"
-          value={formData.latitude}
-          onChange={handleChange}
-          required
-        />
+            <div className="mt-5">
+              <ClinicLocationPicker
+                latitude={formData.latitude}
+                longitude={formData.longitude}
+                onLocationSelect={handleMapLocationSelect}
+              />
+            </div>
+          </div>
 
-        <input
-          name="longitude"
-          type="number"
-          step="any"
-          placeholder="Longitude"
-          value={formData.longitude}
-          onChange={handleChange}
-          required
-        />
-      </div>
+          <label className="block">
+            <span className="mb-2 block text-sm font-semibold text-slate-700">Latitude</span>
+            <input
+              name="latitude"
+              value={formData.latitude}
+              readOnly
+              placeholder="Pick from map"
+              required
+              className="w-full rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-slate-700 outline-none"
+            />
+          </label>
 
-      <button type="button" onClick={handleUseCurrentLocation} disabled={locationLoading}>
-        {locationLoading ? 'Getting current location...' : 'Use Current Location'}
-      </button>
+          <label className="block">
+            <span className="mb-2 block text-sm font-semibold text-slate-700">Longitude</span>
+            <input
+              name="longitude"
+              value={formData.longitude}
+              readOnly
+              placeholder="Pick from map"
+              required
+              className="w-full rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-slate-700 outline-none"
+            />
+          </label>
 
-      {mapUrl ? (
-        <iframe
-          title="clinic-location-preview"
-          src={mapUrl}
-          style={styles.map}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-        />
-      ) : (
-        <div style={styles.mapPlaceholder}>
-          Add latitude and longitude to preview the clinic location on Google Maps.
+          <div className="md:col-span-2">
+            <button
+              type="submit"
+              className="w-full rounded-2xl bg-[#002045] px-5 py-4 text-base font-semibold text-white transition hover:bg-[#1A365D] disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={submitting}
+            >
+              {submitting
+                ? isEdit
+                  ? 'Updating clinic...'
+                  : 'Saving clinic...'
+                : isEdit
+                  ? 'Update clinic'
+                  : 'Create clinic'}
+            </button>
+          </div>
         </div>
-      )}
+      </form>
 
-      <button type="submit" disabled={submitting}>
-        {submitting
-          ? isEdit
-            ? 'Updating...'
-            : 'Saving...'
-          : isEdit
-          ? 'Update Vet Clinic'
-          : 'Add Vet Clinic'}
-      </button>
-    </form>
+      <div className="space-y-6 xl:sticky xl:top-28 xl:self-start">
+        <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+          <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Saved coordinates
+          </div>
+          <div className="mt-4 font-display text-3xl font-bold text-[#002045]">
+            {formData.latitude && formData.longitude
+              ? `${formData.latitude}, ${formData.longitude}`
+              : 'Waiting for selection'}
+          </div>
+          <p className="mt-3 text-sm leading-7 text-slate-600">
+            The clinic marker will stay synced with the selected latitude and longitude.
+          </p>
+        </div>
+
+        <div className="rounded-[28px] border border-dashed border-slate-300 bg-slate-50 p-6">
+          <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Good practice
+          </div>
+          <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+            <li>• Use the exact clinic entrance location so users can navigate correctly.</li>
+            <li>• Keep opening and closing hours aligned with your real appointment schedule.</li>
+            <li>• Ratings are now generated from real reviews, not typed manually.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
   );
 }
-
-const styles = {
-  form: {
-    display: 'grid',
-    gap: '12px',
-    maxWidth: '720px',
-    marginTop: '20px',
-  },
-  timeRow: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-    gap: '12px',
-  },
-  map: {
-    width: '100%',
-    height: '300px',
-    border: 0,
-    borderRadius: '12px',
-  },
-  mapPlaceholder: {
-    minHeight: '120px',
-    display: 'grid',
-    placeItems: 'center',
-    background: '#eef2ff',
-    borderRadius: '12px',
-    padding: '16px',
-    color: '#3730a3',
-  },
-};
 
 export default VetForm;
