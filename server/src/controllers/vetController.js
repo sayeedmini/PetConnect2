@@ -1,4 +1,6 @@
 const VetClinic = require('../models/VetClinic');
+const WEEK_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DEFAULT_CLINIC_IMAGE = '/clinic-default.svg';
 
 const parseNumber = (value) => {
   if (value === undefined || value === null || value === '') return null;
@@ -22,6 +24,9 @@ const parseLocationPayload = (body) => {
 
 const convertClinicPayload = (body) => {
   const location = parseLocationPayload(body);
+  const workingDays = Array.isArray(body.workingDays)
+    ? body.workingDays.filter((day) => WEEK_DAYS.includes(day))
+    : [];
 
   return {
     clinicName: body.clinicName,
@@ -37,7 +42,10 @@ const convertClinicPayload = (body) => {
       openTime: body.openTime,
       closeTime: body.closeTime,
     },
+    workingDays: workingDays.length ? workingDays : WEEK_DAYS.slice(1, 6),
+    appointmentsEnabled: body.appointmentsEnabled !== false && body.appointmentsEnabled !== 'false',
     consultationFee: Number(body.consultationFee),
+    clinicImage: body.clinicImage || DEFAULT_CLINIC_IMAGE,
     ...(location ? { location } : {}),
   };
 };
@@ -52,11 +60,21 @@ const addDerivedFields = (clinic) => {
   const plainClinic = typeof clinic.toObject === 'function' ? clinic.toObject() : { ...clinic };
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const currentDay = WEEK_DAYS[now.getDay()];
   const openMinutes = timeToMinutes(plainClinic?.workingHours?.openTime);
   const closeMinutes = timeToMinutes(plainClinic?.workingHours?.closeTime);
+  const worksToday =
+    Array.isArray(plainClinic?.workingDays) && plainClinic.workingDays.length
+      ? plainClinic.workingDays.includes(currentDay)
+      : true;
 
   let isOpenNow = false;
-  if (openMinutes !== null && closeMinutes !== null) {
+  if (
+    plainClinic?.appointmentsEnabled !== false &&
+    worksToday &&
+    openMinutes !== null &&
+    closeMinutes !== null
+  ) {
     isOpenNow = currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
   }
 
@@ -64,6 +82,11 @@ const addDerivedFields = (clinic) => {
     ...plainClinic,
     latitude: plainClinic?.location?.coordinates?.[1] ?? null,
     longitude: plainClinic?.location?.coordinates?.[0] ?? null,
+    workingDays:
+      Array.isArray(plainClinic?.workingDays) && plainClinic.workingDays.length
+        ? plainClinic.workingDays
+        : WEEK_DAYS.slice(1, 6),
+    appointmentsEnabled: plainClinic?.appointmentsEnabled !== false,
     isOpenNow,
   };
 };

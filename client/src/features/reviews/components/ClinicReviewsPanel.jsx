@@ -8,7 +8,15 @@ import {
 } from '../services/reviewApi';
 import { getUser, isLoggedIn } from '../../auth/utils/auth';
 
-function ClinicReviewsPanel({ clinicId, onReviewStatsChange }) {
+const RATING_LABELS = {
+  1: 'Poor',
+  2: 'Fair',
+  3: 'Good',
+  4: 'Very good',
+  5: 'Excellent',
+};
+
+function ClinicReviewsPanel({ clinicId, clinicName = 'this clinic', onReviewStatsChange }) {
   const user = getUser();
   const loggedIn = isLoggedIn();
   const isAdmin = user?.role === 'admin';
@@ -72,6 +80,8 @@ function ClinicReviewsPanel({ clinicId, onReviewStatsChange }) {
     () => reviews.filter((review) => review.moderationStatus === 'approved'),
     [reviews]
   );
+  const canShowReviewComposer =
+    canWriteReview && loggedIn && (Boolean(myReviewData.review) || Boolean(myReviewData.canReview));
 
   useEffect(() => {
     if (typeof onReviewStatsChange !== 'function') {
@@ -96,6 +106,25 @@ function ClinicReviewsPanel({ clinicId, onReviewStatsChange }) {
       ...prev,
       [e.target.name]: e.target.value,
     }));
+  };
+
+  const handleRatingChange = (rating) => {
+    setFormData((prev) => ({
+      ...prev,
+      rating,
+    }));
+  };
+
+  const handleReset = () => {
+    if (myReviewData.review) {
+      setFormData({
+        rating: myReviewData.review.rating,
+        comment: myReviewData.review.comment || '',
+      });
+      return;
+    }
+
+    setFormData({ rating: 5, comment: '' });
   };
 
   const handleSubmit = async (e) => {
@@ -153,114 +182,169 @@ function ClinicReviewsPanel({ clinicId, onReviewStatsChange }) {
   };
 
   return (
-    <section style={styles.wrapper}>
-      <div style={styles.sectionHeader}>
+    <section className="review-shell">
+      <div className="review-shell-head">
         <div>
-          <h2 style={{ marginBottom: 6 }}>Clinic Reviews</h2>
-          <p style={styles.subtleText}>
+          <h2 className="review-shell-title">Clinic Reviews</h2>
+          <p className="review-shell-subtitle">
             Verified pet owners can submit one review per clinic after a completed appointment.
           </p>
         </div>
-        <div style={styles.statChip}>{approvedReviews.length} approved review(s)</div>
+        <div className="review-stat-pill">{approvedReviews.length} approved review(s)</div>
       </div>
 
       {loading ? (
-        <p>Loading reviews...</p>
+        <div className="review-empty-card">Loading reviews...</div>
       ) : (
         <>
-          {canWriteReview && loggedIn && (
-            <div style={styles.formCard}>
-              <h3 style={{ marginTop: 0 }}>
-                {myReviewData.review ? 'Edit Your Review' : 'Write a Review'}
-              </h3>
+          {canShowReviewComposer && (
+            <div className="review-compose-wrap">
+              <div className="review-compose-header">
+                <div className="review-backline">Share Your Experience</div>
+                <h3 className="review-compose-title">
+                  {myReviewData.review ? 'Update your clinic review' : 'Write a clinic review'}
+                </h3>
+                <p className="review-compose-copy">
+                  Your review helps other pet parents find the best care.
+                </p>
+              </div>
 
-              {!myReviewData.review && !myReviewData.canReview && myReviewData.reason && (
-                <p style={styles.warningText}>{myReviewData.reason}</p>
-              )}
+              <form onSubmit={handleSubmit} className="review-compose-card">
+                <div className="review-visit-banner">
+                  <span className="review-info-badge">i</span>
+                  <p>
+                    Review for your recent visit to <strong>{clinicName}</strong>
+                    {user?.name ? (
+                      <>
+                        {' '}as <strong>{user.name}</strong>
+                      </>
+                    ) : null}
+                  </p>
+                </div>
 
-              {(myReviewData.review || myReviewData.canReview) && (
-                <form onSubmit={handleSubmit} style={styles.formGrid}>
-                  <label>
-                    Rating
-                    <select
-                      name="rating"
-                      value={formData.rating}
-                      onChange={handleFormChange}
-                      required
-                    >
-                      {[5, 4, 3, 2, 1].map((value) => (
-                        <option key={value} value={value}>
-                          {value} Star{value > 1 ? 's' : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                <div className="review-clinic-row">
+                  <div>
+                    <div className="review-field-label">Clinic</div>
+                    <div className="review-clinic-name">{clinicName}</div>
+                  </div>
+                  <div className="review-verified-pill">Verified Visit</div>
+                </div>
 
-                  <label>
-                    Review Comment
-                    <textarea
-                      name="comment"
-                      rows="4"
-                      placeholder="Share your appointment experience, communication, and service quality"
-                      value={formData.comment}
-                      onChange={handleFormChange}
-                    />
-                  </label>
+                {(myReviewData.review || myReviewData.canReview) && (
+                  <>
+                    <div className="review-section">
+                      <div className="review-field-label">Overall Rating</div>
+                      <div className="review-rating-row">
+                        <div className="review-stars" role="radiogroup" aria-label="Overall rating">
+                          {[1, 2, 3, 4, 5].map((value) => (
+                            <button
+                              key={value}
+                              type="button"
+                              className={`review-star-button ${Number(formData.rating) >= value ? 'active' : ''}`}
+                              onClick={() => handleRatingChange(value)}
+                              aria-label={`${value} star${value > 1 ? 's' : ''}`}
+                              aria-pressed={Number(formData.rating) >= value}
+                            >
+                              ★
+                            </button>
+                          ))}
+                        </div>
+                        <span className="review-rating-label">
+                          {RATING_LABELS[Number(formData.rating)] || 'Excellent'}
+                        </span>
+                      </div>
+                    </div>
 
-                  <button type="submit" disabled={submitting}>
-                    {submitting
-                      ? 'Saving review...'
-                      : myReviewData.review
-                        ? 'Update Review'
-                        : 'Submit Review'}
-                  </button>
-                </form>
-              )}
+                    <div className="review-section">
+                      <label className="review-field-label" htmlFor="review-comment">
+                        Detailed Review
+                      </label>
+                      <textarea
+                        id="review-comment"
+                        name="comment"
+                        rows="5"
+                        maxLength="500"
+                        className="review-textarea"
+                        placeholder="Share details about the care your pet received, the staff professionalism, and the clinic environment..."
+                        value={formData.comment}
+                        onChange={handleFormChange}
+                      />
+                      <div className="review-char-count">{formData.comment.length} / 500 characters</div>
+                    </div>
+
+                    <div className="review-identity-grid">
+                      <div className="review-readonly-field">
+                        <label className="review-field-label" htmlFor="reviewer-name">
+                          Your Name
+                        </label>
+                        <input id="reviewer-name" value={user?.name || 'Pet owner'} readOnly />
+                      </div>
+
+                      <div className="review-readonly-field">
+                        <label className="review-field-label" htmlFor="clinic-name-readonly">
+                          Clinic
+                        </label>
+                        <input id="clinic-name-readonly" value={clinicName} readOnly />
+                      </div>
+                    </div>
+
+                    <div className="review-action-row">
+                      <button type="button" className="review-cancel-button" onClick={handleReset}>
+                        Cancel
+                      </button>
+                      <button type="submit" className="review-submit-button" disabled={submitting}>
+                        {submitting
+                          ? 'Saving review...'
+                          : myReviewData.review
+                            ? 'Update Review'
+                            : 'Submit Review'}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </form>
             </div>
           )}
 
           {reviews.length === 0 ? (
-            <p>No reviews yet.</p>
+            <div className="review-empty-card">No reviews yet.</div>
           ) : (
-            <div style={styles.reviewList}>
+            <div className="review-list-grid">
               {reviews.map((review) => {
                 const draft = getModerationDraft(review);
 
                 return (
-                  <div key={review._id} style={styles.reviewCard}>
-                    <div style={styles.reviewHeader}>
+                  <article key={review._id} className="review-card">
+                    <div className="review-card-head">
                       <div>
-                        <h4 style={{ margin: 0 }}>{review.reviewer?.name || 'Anonymous user'}</h4>
-                        <p style={styles.subtleText}>
+                        <h4 className="review-card-name">{review.reviewer?.name || 'Anonymous user'}</h4>
+                        <p className="review-card-meta">
                           {new Date(review.createdAt).toLocaleString()} · {review.rating}/5 rating
                         </p>
                       </div>
                       <span
-                        style={{
-                          ...styles.statusBadge,
-                          background:
-                            review.moderationStatus === 'approved' ? '#dcfce7' : '#fee2e2',
-                          color: review.moderationStatus === 'approved' ? '#166534' : '#991b1b',
-                        }}
+                        className={`review-status-badge ${
+                          review.moderationStatus === 'approved' ? 'approved' : 'rejected'
+                        }`}
                       >
                         {review.moderationStatus}
                       </span>
                     </div>
 
-                    <p style={{ marginTop: 12 }}>
+                    <p className="review-card-copy">
                       {review.comment || 'No written comment provided.'}
                     </p>
 
                     {review.adminNote && (
-                      <p style={styles.adminNote}>
+                      <div className="review-admin-note">
                         <strong>Admin note:</strong> {review.adminNote}
-                      </p>
+                      </div>
                     )}
 
                     {isAdmin && (
-                      <div style={styles.adminPanel}>
-                        <label>
-                          Moderation Status
+                      <div className="review-admin-panel">
+                        <label className="review-admin-field">
+                          <span className="review-field-label">Moderation Status</span>
                           <select
                             value={draft.moderationStatus}
                             onChange={(e) =>
@@ -272,8 +356,8 @@ function ClinicReviewsPanel({ clinicId, onReviewStatsChange }) {
                           </select>
                         </label>
 
-                        <label>
-                          Admin Note
+                        <label className="review-admin-field">
+                          <span className="review-field-label">Admin Note</span>
                           <textarea
                             rows="3"
                             value={draft.adminNote}
@@ -283,12 +367,12 @@ function ClinicReviewsPanel({ clinicId, onReviewStatsChange }) {
                           />
                         </label>
 
-                        <button type="button" onClick={() => handleModerationSave(review)}>
+                        <button type="button" className="review-admin-save" onClick={() => handleModerationSave(review)}>
                           Save Moderation
                         </button>
                       </div>
                     )}
-                  </div>
+                  </article>
                 );
               })}
             </div>
@@ -298,83 +382,5 @@ function ClinicReviewsPanel({ clinicId, onReviewStatsChange }) {
     </section>
   );
 }
-
-const styles = {
-  wrapper: {
-    marginTop: '28px',
-    background: '#fff',
-    borderRadius: '16px',
-    padding: '24px',
-    boxShadow: '0 12px 28px rgba(0,0,0,0.08)',
-  },
-  sectionHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: '14px',
-    flexWrap: 'wrap',
-    marginBottom: '18px',
-  },
-  statChip: {
-    background: '#eef2ff',
-    color: '#3730a3',
-    padding: '10px 14px',
-    borderRadius: '999px',
-    fontWeight: 600,
-  },
-  subtleText: {
-    margin: 0,
-    color: '#475569',
-  },
-  formCard: {
-    background: '#f8fafc',
-    borderRadius: '14px',
-    padding: '18px',
-    marginBottom: '18px',
-  },
-  formGrid: {
-    display: 'grid',
-    gap: '12px',
-  },
-  warningText: {
-    color: '#b45309',
-  },
-  reviewList: {
-    display: 'grid',
-    gap: '16px',
-  },
-  reviewCard: {
-    border: '1px solid #e2e8f0',
-    borderRadius: '14px',
-    padding: '18px',
-  },
-  reviewHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: '12px',
-    flexWrap: 'wrap',
-  },
-  statusBadge: {
-    display: 'inline-block',
-    padding: '6px 10px',
-    borderRadius: '999px',
-    textTransform: 'capitalize',
-    fontWeight: 700,
-    fontSize: '0.88rem',
-  },
-  adminNote: {
-    background: '#f8fafc',
-    borderRadius: '12px',
-    padding: '12px',
-  },
-  adminPanel: {
-    display: 'grid',
-    gap: '10px',
-    marginTop: '14px',
-    paddingTop: '14px',
-    borderTop: '1px solid #e2e8f0',
-  },
-};
 
 export default ClinicReviewsPanel;

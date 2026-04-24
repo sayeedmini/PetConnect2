@@ -24,6 +24,7 @@ function AppointmentPrescriptionPage() {
   const [prescription, setPrescription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [selectedMedicineIndex, setSelectedMedicineIndex] = useState(0);
   const [formData, setFormData] = useState({
     diagnosis: '',
     notes: '',
@@ -41,23 +42,16 @@ function AppointmentPrescriptionPage() {
 
       const appointmentData = appointmentResponse.data;
       const prescriptionData = prescriptionResponse.data;
+      const medicines = prescriptionData?.medicines?.length ? prescriptionData.medicines : [createMedicineRow()];
 
       setAppointment(appointmentData);
       setPrescription(prescriptionData);
-
-      if (prescriptionData) {
-        setFormData({
-          diagnosis: prescriptionData.diagnosis || '',
-          notes: prescriptionData.notes || '',
-          medicines: prescriptionData.medicines?.length ? prescriptionData.medicines : [createMedicineRow()],
-        });
-      } else {
-        setFormData({
-          diagnosis: '',
-          notes: '',
-          medicines: [createMedicineRow()],
-        });
-      }
+      setFormData({
+        diagnosis: prescriptionData?.diagnosis || '',
+        notes: prescriptionData?.notes || '',
+        medicines,
+      });
+      setSelectedMedicineIndex(0);
     } catch (error) {
       alert(error?.response?.data?.message || 'Failed to load prescription page');
       console.error(error);
@@ -74,6 +68,8 @@ function AppointmentPrescriptionPage() {
     return isPrescriptionEditor && appointment?.status === 'completed';
   }, [appointment?.status, isPrescriptionEditor]);
 
+  const activeMedicine = formData.medicines[selectedMedicineIndex] || createMedicineRow();
+
   const handleFieldChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -81,30 +77,45 @@ function AppointmentPrescriptionPage() {
     }));
   };
 
-  const handleMedicineChange = (index, field, value) => {
+  const handleMedicineChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       medicines: prev.medicines.map((medicine, medicineIndex) =>
-        medicineIndex === index ? { ...medicine, [field]: value } : medicine
+        medicineIndex === selectedMedicineIndex ? { ...medicine, [field]: value } : medicine
       ),
     }));
   };
 
   const addMedicine = () => {
-    setFormData((prev) => ({
-      ...prev,
-      medicines: [...prev.medicines, createMedicineRow()],
-    }));
+    setFormData((prev) => {
+      const nextMedicines = [...prev.medicines, createMedicineRow()];
+      setSelectedMedicineIndex(nextMedicines.length - 1);
+      return {
+        ...prev,
+        medicines: nextMedicines,
+      };
+    });
   };
 
   const removeMedicine = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      medicines:
+    setFormData((prev) => {
+      const nextMedicines =
         prev.medicines.length === 1
           ? [createMedicineRow()]
-          : prev.medicines.filter((_, medicineIndex) => medicineIndex !== index),
-    }));
+          : prev.medicines.filter((_, medicineIndex) => medicineIndex !== index);
+
+      setSelectedMedicineIndex((currentIndex) => {
+        if (nextMedicines.length === 1) return 0;
+        if (currentIndex > index) return currentIndex - 1;
+        if (currentIndex >= nextMedicines.length) return nextMedicines.length - 1;
+        return currentIndex;
+      });
+
+      return {
+        ...prev,
+        medicines: nextMedicines,
+      };
+    });
   };
 
   const handleSavePrescription = async (e) => {
@@ -148,154 +159,259 @@ function AppointmentPrescriptionPage() {
       backLabel="Back to appointments"
       eyebrow="Digital prescription"
       title="Prescription workspace"
-      subtitle="Create, update, download, and verify prescriptions after a completed appointment."
-      actions={
-        prescription ? (
-          <button type="button" className="btn btn-primary" onClick={() => downloadPrescriptionPdf(prescription)}>
-            Download PDF prescription
-          </button>
-        ) : null
-      }
+      subtitle="Create, update, and organize medicines in a clearer prescription editor."
     >
-      <section className="detail-layout">
-        <div className="side-stack">
-          <div className="card detail-panel">
-            <h3 className="section-title">Appointment summary</h3>
-            <div className="info-grid">
-              <div className="info-row-card">
-                <span className="info-label">Clinic</span>
-                <span className="info-value">{appointment.clinic?.clinicName}</span>
+      <section className="prescription-shell">
+        <div className="prescription-patient-card">
+          <div className="prescription-patient-main">
+            <div className="prescription-avatar">
+              {(appointment.petName || 'P').charAt(0).toUpperCase()}
+            </div>
+            <div className="prescription-patient-copy">
+              <div className="prescription-patient-topline">
+                <h2>{appointment.petName}</h2>
+                <span className="prescription-chip">{appointment.petType || 'Pet'}</span>
               </div>
-              <div className="info-row-card">
-                <span className="info-label">Pet</span>
-                <span className="info-value">{appointment.petName}</span>
-              </div>
-              <div className="info-row-card">
-                <span className="info-label">Pet type</span>
-                <span className="info-value">{appointment.petType || 'Not specified'}</span>
-              </div>
-              <div className="info-row-card">
-                <span className="info-label">Date</span>
-                <span className="info-value">{formatFriendlyDate(appointment.appointmentDate)}</span>
-              </div>
-              <div className="info-row-card">
-                <span className="info-label">Time</span>
-                <span className="info-value">{appointment.slotLabel}</span>
-              </div>
-              <div className="info-row-card">
-                <span className="info-label">Status</span>
-                <span className="info-value">{appointment.status}</span>
-              </div>
+              <p>
+                <span>{appointment.clinic?.clinicName || 'Clinic not available'}</span>
+                <span className="prescription-dot" />
+                <span>{formatFriendlyDate(appointment.appointmentDate)}</span>
+                <span className="prescription-dot" />
+                <span>{appointment.slotLabel}</span>
+              </p>
             </div>
           </div>
 
-          <div className="card detail-panel">
-            <h3 className="section-title">Prescription status</h3>
-            <p className="card-copy">
-              {prescription ? 'A prescription already exists for this appointment.' : 'No prescription has been saved yet.'}
-            </p>
-            <p className="card-copy"><strong>Verification code:</strong> {prescription?.verificationCode || 'Pending'}</p>
-            <p className="card-copy"><strong>Issued at:</strong> {prescription ? new Date(prescription.issuedAt || prescription.createdAt).toLocaleString() : 'Pending'}</p>
-            {!canEditPrescription && !prescription && (
-              <p className="calendar-note">
-                Only the assigned vet or admin can create a prescription after the appointment is completed.
-              </p>
-            )}
+          <div className="prescription-patient-side">
+            <div className="prescription-owner-label">Owner</div>
+            <div className="prescription-owner-name">{appointment.petOwner?.name || 'Not available'}</div>
+            <div className="prescription-status-row">
+              <span className="prescription-status-pill">{appointment.status}</span>
+              <span className="prescription-owner-date">
+                {prescription ? `Issued ${new Date(prescription.issuedAt || prescription.createdAt).toLocaleDateString()}` : 'Not issued yet'}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="side-stack">
-          {canEditPrescription ? (
-            <form onSubmit={handleSavePrescription} className="form-card">
-              <div className="form-grid">
-                <div className="form-group form-full">
-                  <label>Diagnosis</label>
-                  <textarea
-                    name="diagnosis"
-                    rows="4"
-                    value={formData.diagnosis}
-                    onChange={handleFieldChange}
-                    placeholder="Primary diagnosis and clinical findings"
-                    required
-                  />
-                </div>
-
-                <div className="form-full card slot-panel">
-                  <div className="toolbar" style={{ justifyContent: 'space-between' }}>
-                    <h3 className="section-title" style={{ margin: 0 }}>Medicines</h3>
-                    <button type="button" className="btn btn-secondary" onClick={addMedicine}>
-                      Add medicine
+        <div className="prescription-main-grid">
+          <div className="prescription-editor-column">
+            {canEditPrescription ? (
+              <form id="prescription-editor-form" onSubmit={handleSavePrescription} className="prescription-form-stack">
+                <section className="prescription-panel">
+                  <div className="prescription-panel-head">
+                    <div>
+                      <p className="prescription-section-kicker">Medication</p>
+                      <h3>Add medication</h3>
+                    </div>
+                    <button type="button" className="prescription-ghost-button" onClick={addMedicine}>
+                      + New medicine
                     </button>
                   </div>
 
-                  <div className="appointment-list" style={{ marginTop: '16px' }}>
-                    {formData.medicines.map((medicine, index) => (
-                      <div key={`${index}-${medicine.name}`} className="card detail-panel">
-                        <div className="toolbar" style={{ justifyContent: 'space-between' }}>
-                          <strong>Medicine {index + 1}</strong>
-                          <button type="button" className="btn btn-danger btn-sm" onClick={() => removeMedicine(index)}>
-                            Remove
-                          </button>
-                        </div>
+                  <div className="prescription-editor-grid">
+                    <div className="prescription-field prescription-field-full">
+                      <label>Medicine name</label>
+                      <input
+                        className="prescription-entry-input"
+                        value={activeMedicine.name}
+                        onChange={(e) => handleMedicineChange('name', e.target.value)}
+                        placeholder="Search drug database or type medicine name"
+                        required
+                      />
+                    </div>
 
-                        <div className="form-grid" style={{ marginTop: '12px' }}>
-                          <div className="form-group">
-                            <label>Name</label>
-                            <input value={medicine.name} onChange={(e) => handleMedicineChange(index, 'name', e.target.value)} placeholder="Medicine name" required />
-                          </div>
-                          <div className="form-group">
-                            <label>Dosage</label>
-                            <input value={medicine.dosage} onChange={(e) => handleMedicineChange(index, 'dosage', e.target.value)} placeholder="1 tablet" required />
-                          </div>
-                          <div className="form-group">
-                            <label>Frequency</label>
-                            <input value={medicine.frequency} onChange={(e) => handleMedicineChange(index, 'frequency', e.target.value)} placeholder="Twice daily" />
-                          </div>
-                          <div className="form-group">
-                            <label>Duration</label>
-                            <input value={medicine.duration} onChange={(e) => handleMedicineChange(index, 'duration', e.target.value)} placeholder="5 days" />
-                          </div>
-                          <div className="form-group form-full">
-                            <label>Instructions</label>
-                            <textarea value={medicine.instructions} onChange={(e) => handleMedicineChange(index, 'instructions', e.target.value)} rows="3" placeholder="After food / before sleep / special instructions" />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                    <div className="prescription-field">
+                      <label>Dosage</label>
+                      <input
+                        className="prescription-entry-input"
+                        value={activeMedicine.dosage}
+                        onChange={(e) => handleMedicineChange('dosage', e.target.value)}
+                        placeholder="e.g. 50mg or 1 tablet"
+                        required
+                      />
+                    </div>
+
+                    <div className="prescription-field">
+                      <label>Frequency</label>
+                      <input
+                        className="prescription-entry-input"
+                        value={activeMedicine.frequency}
+                        onChange={(e) => handleMedicineChange('frequency', e.target.value)}
+                        placeholder="e.g. BID or twice daily"
+                      />
+                    </div>
+
+                    <div className="prescription-field">
+                      <label>Duration</label>
+                      <input
+                        className="prescription-entry-input"
+                        value={activeMedicine.duration}
+                        onChange={(e) => handleMedicineChange('duration', e.target.value)}
+                        placeholder="e.g. 5 days"
+                      />
+                    </div>
+
+                    <div className="prescription-field prescription-field-full">
+                      <label>Special instructions</label>
+                      <textarea
+                        className="prescription-entry-input prescription-entry-textarea"
+                        value={activeMedicine.instructions}
+                        onChange={(e) => handleMedicineChange('instructions', e.target.value)}
+                        rows="5"
+                        placeholder="Give with food, avoid on empty stomach, shake before use, or any other instructions"
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                <section className="prescription-panel">
+                  <div className="prescription-panel-head">
+                    <div>
+                      <p className="prescription-section-kicker">Clinical notes</p>
+                      <h3>Diagnosis and follow-up notes</h3>
+                    </div>
+                  </div>
+
+                  <div className="prescription-notes-grid">
+                    <div className="prescription-field">
+                      <label>Diagnosis</label>
+                      <textarea
+                        name="diagnosis"
+                        className="prescription-entry-input prescription-entry-textarea"
+                        rows="5"
+                        value={formData.diagnosis}
+                        onChange={handleFieldChange}
+                        placeholder="Enter diagnosis, symptoms, and clinical findings"
+                        required
+                      />
+                    </div>
+
+                    <div className="prescription-field">
+                      <label>Additional notes</label>
+                      <textarea
+                        name="notes"
+                        className="prescription-entry-input prescription-entry-textarea"
+                        rows="5"
+                        value={formData.notes}
+                        onChange={handleFieldChange}
+                        placeholder="Dietary advice, warning signs, revisit plan, or extra comments"
+                      />
+                    </div>
+                  </div>
+                </section>
+              </form>
+            ) : (
+              <section className="prescription-panel">
+                <div className="prescription-panel-head">
+                  <div>
+                    <p className="prescription-section-kicker">Saved record</p>
+                    <h3>Prescription details</h3>
                   </div>
                 </div>
 
-                <div className="form-group form-full">
-                  <label>Additional notes</label>
-                  <textarea
-                    name="notes"
-                    rows="5"
-                    value={formData.notes}
-                    onChange={handleFieldChange}
-                    placeholder="Follow-up advice, dietary instructions, warning signs, or revisit notes"
-                  />
+                <div className="prescription-readonly-copy">
+                  <p><strong>Diagnosis:</strong> {prescription?.diagnosis || 'No diagnosis recorded yet.'}</p>
+                  <p><strong>Notes:</strong> {prescription?.notes || 'No additional notes.'}</p>
+                  {!prescription && (
+                    <p>Only the assigned vet or admin can create a prescription after the appointment is completed.</p>
+                  )}
                 </div>
+              </section>
+            )}
+          </div>
 
-                <div className="form-full toolbar">
-                  <button type="submit" className="btn btn-primary" disabled={saving}>
-                    {saving ? 'Saving prescription...' : prescription ? 'Update prescription' : 'Save prescription'}
-                  </button>
+          <aside className="prescription-sidebar">
+            <section className="prescription-panel prescription-list-panel">
+              <div className="prescription-panel-head">
+                <div>
+                  <p className="prescription-section-kicker">Prescription list</p>
+                  <h3>Medicines</h3>
+                </div>
+                <span className="prescription-count-pill">{formData.medicines.length} item{formData.medicines.length === 1 ? '' : 's'}</span>
+              </div>
+
+              <div className="prescription-list-scroll">
+                {formData.medicines.map((medicine, index) => (
+                  <div
+                    key={index}
+                    className={`prescription-list-card ${selectedMedicineIndex === index ? 'active' : ''}`}
+                    onClick={() => setSelectedMedicineIndex(index)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedMedicineIndex(index);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className="prescription-list-card-top">
+                      <div>
+                        <h4>{medicine.name || `Medicine ${index + 1}`}</h4>
+                        <p>{medicine.dosage || 'Dosage not added yet'}</p>
+                      </div>
+                      {canEditPrescription && (
+                        <button
+                          type="button"
+                          className="prescription-delete-link"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeMedicine(index);
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="prescription-list-meta">
+                      <span>{medicine.frequency || 'Frequency pending'}</span>
+                      <span>{medicine.duration || 'Duration pending'}</span>
+                    </div>
+
+                    {medicine.instructions ? (
+                      <div className="prescription-list-instructions">{medicine.instructions}</div>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="prescription-panel prescription-action-panel">
+              <div className="prescription-panel-head">
+                <div>
+                  <p className="prescription-section-kicker">Actions</p>
+                  <h3>Complete prescription</h3>
                 </div>
               </div>
-            </form>
-          ) : (
-            <div className="card detail-panel">
-              <h3 className="section-title">Saved prescription</h3>
-              {prescription ? (
-                <>
-                  <p className="card-copy"><strong>Diagnosis:</strong> {prescription.diagnosis}</p>
-                  <p className="card-copy"><strong>Notes:</strong> {prescription.notes || 'No additional notes.'}</p>
-                </>
-              ) : (
-                <p className="card-copy">A prescription is not available yet.</p>
-              )}
-            </div>
-          )}
+
+              <div className="prescription-status-copy">
+                <p>{prescription ? 'A prescription already exists for this appointment.' : 'No prescription has been saved yet.'}</p>
+                <p><strong>Verification code:</strong> {prescription?.verificationCode || 'Pending'}</p>
+              </div>
+
+              <div className="prescription-action-stack">
+                {canEditPrescription && (
+                  <button type="submit" form="prescription-editor-form" className="prescription-primary-button" disabled={saving}>
+                    {saving ? 'Saving prescription...' : prescription ? 'Update prescription' : 'Issue prescription'}
+                  </button>
+                )}
+
+                {prescription ? (
+                  <button type="button" className="prescription-secondary-button" onClick={() => downloadPrescriptionPdf(prescription)}>
+                    Download PDF prescription
+                  </button>
+                ) : null}
+
+                {!canEditPrescription && !prescription ? (
+                  <div className="prescription-readonly-note">
+                    Only the assigned vet or admin can create a prescription after the appointment is completed.
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          </aside>
         </div>
       </section>
     </SiteLayout>

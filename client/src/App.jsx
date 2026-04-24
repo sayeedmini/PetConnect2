@@ -22,25 +22,25 @@ const featureCards = [
     title: 'Trusted Vets',
     description: 'Access verified clinics and compare service quality, ratings, and consultation details.',
     tone: 'bg-[#DDEAFE] text-[#002045]',
-    icon: '✚',
+    icon: '+',
   },
   {
     title: 'Easy Booking',
     description: 'Choose a clinic, find an available slot, and confirm appointments in a polished flow.',
     tone: 'bg-[#D7F4F4] text-[#13696A]',
-    icon: '🗓',
+    icon: 'C',
   },
   {
     title: 'Digital Prescriptions',
     description: 'Keep treatment history, medicine details, PDF exports, and QR verification together.',
     tone: 'bg-[#E4EAFB] text-[#1A365D]',
-    icon: '🧾',
+    icon: 'Rx',
   },
   {
     title: 'Verified Reviews',
     description: 'Make informed choices with clinic reviews from completed appointments only.',
     tone: 'bg-[#D9F4EF] text-[#13696A]',
-    icon: '★',
+    icon: '*',
   },
 ];
 
@@ -136,7 +136,7 @@ function Home() {
           <div className="relative flex items-center justify-center">
             <div className="absolute -bottom-2 left-2 z-10 rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-xl backdrop-blur">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-100 text-xl text-teal-700">✚</div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-100 text-xl text-teal-700">+</div>
                 <div>
                   <div className="text-sm font-bold text-[#002045]">500+ Verified Clinics</div>
                   <div className="text-sm text-slate-500">Trusted professionals across the platform</div>
@@ -182,7 +182,7 @@ function Home() {
             <p className="mt-2 text-base leading-8 text-slate-600">Discover trusted veterinary care near you.</p>
           </div>
           <Link to="/vets" className="text-sm font-semibold text-teal-700 hover:text-teal-800">
-            View all clinics →
+            View all clinics {'->'}
           </Link>
         </div>
 
@@ -199,7 +199,8 @@ function Home() {
         ) : (
           <div className="mt-10 grid gap-6 lg:grid-cols-3">
             {clinics.map((clinic, index) => {
-              const ratingValue = typeof clinic.rating === 'number' ? clinic.rating : 4.8;
+              const hasReviews = Number(clinic.totalReviews || 0) > 0;
+              const ratingValue = typeof clinic.rating === 'number' ? clinic.rating : 0;
               const image = clinicImageFallbacks[index % clinicImageFallbacks.length];
 
               return (
@@ -207,7 +208,7 @@ function Home() {
                   <div className="relative">
                     <img src={image} alt={clinic.clinicName} className="h-52 w-full object-cover" />
                     <div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[#002045] shadow-sm">
-                      ⭐ {ratingValue.toFixed ? ratingValue.toFixed(1) : ratingValue}
+                      {hasReviews ? `★ ${ratingValue.toFixed(1)}` : 'No reviews yet'}
                     </div>
                   </div>
                   <div className="p-6">
@@ -257,7 +258,7 @@ function App() {
         <Route
           path="/vets/add"
           element={
-            <ProtectedRoute allowedRoles={['vet', 'admin']}>
+            <ProtectedRoute allowedRoles={['vet']}>
               <AddVetPage />
             </ProtectedRoute>
           }

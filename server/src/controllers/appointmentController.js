@@ -6,6 +6,7 @@ const {
 } = require('../services/googleCalendarService');
 
 const SLOT_DURATION_MINUTES = 30;
+const WEEK_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const parseMinutes = (timeValue = '') => {
   const [hours, minutes] = timeValue.split(':').map(Number);
@@ -53,6 +54,19 @@ const serializeSlot = ({ label, startTime, endTime }) => ({
 });
 
 const generateAvailableSlots = async ({ clinic, dateValue, excludeAppointmentId = null }) => {
+  if (clinic?.appointmentsEnabled === false) {
+    return [];
+  }
+
+  const requestedDay = WEEK_DAYS[new Date(`${dateValue}T00:00:00`).getDay()];
+  const workingDays = Array.isArray(clinic?.workingDays) && clinic.workingDays.length
+    ? clinic.workingDays
+    : WEEK_DAYS.slice(1, 6);
+
+  if (!workingDays.includes(requestedDay)) {
+    return [];
+  }
+
   const openMinutes = parseMinutes(clinic?.workingHours?.openTime);
   const closeMinutes = parseMinutes(clinic?.workingHours?.closeTime);
 
@@ -126,6 +140,10 @@ const getAvailableSlots = async (req, res) => {
     }
 
     const clinic = await VetClinic.findById(clinicId);
+    const workingDays =
+      Array.isArray(clinic?.workingDays) && clinic.workingDays.length
+        ? clinic.workingDays
+        : WEEK_DAYS.slice(1, 6);
 
     if (!clinic) {
       return res.status(404).json({
@@ -147,6 +165,8 @@ const getAvailableSlots = async (req, res) => {
         _id: clinic._id,
         clinicName: clinic.clinicName,
         workingHours: clinic.workingHours,
+        workingDays,
+        appointmentsEnabled: clinic.appointmentsEnabled !== false,
       },
       slots,
     });
@@ -198,6 +218,13 @@ const createAppointment = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Vet clinic not found',
+      });
+    }
+
+    if (clinic.appointmentsEnabled === false) {
+      return res.status(400).json({
+        success: false,
+        message: 'This clinic is not accepting appointments right now',
       });
     }
 
@@ -455,6 +482,13 @@ const rescheduleAppointment = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Vet clinic not found',
+      });
+    }
+
+    if (clinic.appointmentsEnabled === false) {
+      return res.status(400).json({
+        success: false,
+        message: 'This clinic is not accepting appointments right now',
       });
     }
 

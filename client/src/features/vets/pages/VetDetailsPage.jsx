@@ -5,13 +5,13 @@ import { getUser } from '../../auth/utils/auth';
 import ClinicReviewsPanel from '../../reviews/components/ClinicReviewsPanel';
 import { deleteVet, getVetById } from '../services/vetApi';
 
+const DEFAULT_CLINIC_IMAGE = '/clinic-default.svg';
+
 function StatBox({ label, value }) {
   return (
-    <div className="rounded-2xl bg-slate-50 p-4">
-      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-        {label}
-      </div>
-      <div className="mt-2 text-base font-semibold text-[#002045]">{value}</div>
+    <div className="clinic-stat-box">
+      <div className="clinic-stat-label">{label}</div>
+      <div className="clinic-stat-value">{value}</div>
     </div>
   );
 }
@@ -104,9 +104,20 @@ function VetDetailsPage() {
   const isAdmin = currentUser?.role === 'admin';
   const canManage = isOwner || isAdmin;
   const canBook = currentUser && ['petOwner', 'admin'].includes(currentUser.role);
+  const appointmentsEnabled = vet.appointmentsEnabled !== false;
   const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     `${vet.latitude},${vet.longitude}`
   )}`;
+  const ratingValue = vet.rating ? `${vet.rating} / 5` : 'Not rated yet';
+  const totalReviewsLabel = vet.totalReviews ? `${vet.totalReviews} reviews` : 'No reviews yet';
+  const workingHoursLabel =
+    vet.workingHours?.openTime && vet.workingHours?.closeTime
+      ? `${vet.workingHours.openTime} - ${vet.workingHours.closeTime}`
+      : 'Hours not provided';
+  const workingDaysLabel =
+    Array.isArray(vet.workingDays) && vet.workingDays.length
+      ? vet.workingDays.join(', ')
+      : 'Working days not provided';
 
   return (
     <SiteLayout
@@ -115,7 +126,7 @@ function VetDetailsPage() {
       backLabel="Back to clinics"
       eyebrow="Clinic details"
       title={vet.clinicName}
-      subtitle="Review clinic information, map location, services, and verified owner reviews in one place."
+      subtitle="Review clinic information, services, location, and verified owner reviews in one place."
       actions={
         <>
           <a
@@ -126,14 +137,19 @@ function VetDetailsPage() {
           >
             Open in Google Maps
           </a>
-          {canBook && (
-            <Link
-              className="rounded-xl bg-[#002045] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1A365D]"
-              to={`/vets/${vet._id}/book`}
-            >
-              Book appointment
-            </Link>
-          )}
+          {canBook &&
+            (appointmentsEnabled ? (
+              <Link
+                className="rounded-xl bg-[#002045] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1A365D]"
+                to={`/vets/${vet._id}/book`}
+              >
+                Book appointment
+              </Link>
+            ) : (
+              <span className="rounded-xl border border-slate-300 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-500">
+                Appointments off
+              </span>
+            ))}
           {canManage && (
             <Link
               className="rounded-xl border border-teal-300 bg-teal-50 px-4 py-2.5 text-sm font-semibold text-teal-800 transition hover:bg-teal-100"
@@ -154,83 +170,122 @@ function VetDetailsPage() {
         </>
       }
     >
-      <div className="grid gap-8 xl:grid-cols-[1fr_360px]">
-        <div className="space-y-6">
-          <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <StatBox label="Status" value={vet.isOpenNow ? 'Open now' : 'Closed now'} />
-              <StatBox label="Consultation fee" value={`৳ ${vet.consultationFee}`} />
-              <StatBox label="Contact" value={vet.contactNumber} />
-              <StatBox
-                label="Rating"
-                value={`${vet.rating ?? 'N/A'} / 5 ${
-                  vet.totalReviews ? `(${vet.totalReviews} reviews)` : ''
-                }`}
-              />
-              <StatBox
-                label="Working hours"
-                value={`${vet.workingHours?.openTime} - ${vet.workingHours?.closeTime}`}
-              />
-              <StatBox label="Coordinates" value={`${vet.latitude}, ${vet.longitude}`} />
+      <div className="clinic-page-shell">
+        <section className="clinic-hero-card">
+          <div className="clinic-hero-media">
+            <img
+              src={vet.clinicImage || DEFAULT_CLINIC_IMAGE}
+              alt={vet.clinicName}
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <div className="clinic-hero-copy">
+            <div className="clinic-kicker-row">
+              <span className="clinic-visit-pill">{vet.isOpenNow ? 'Open now' : 'Closed now'}</span>
+              <span className="clinic-verified-pill">Verified Clinic</span>
             </div>
-          </section>
+            <h2>{vet.clinicName}</h2>
+            <p>{vet.address}</p>
+          </div>
 
-          <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-            <h2 className="font-display text-3xl font-bold text-[#002045]">Clinic overview</h2>
-            <p className="mt-4 text-base leading-8 text-slate-600">{vet.address}</p>
-            <div className="mt-6 border-t border-slate-200 pt-6">
-              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                Services offered
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {vet.servicesOffered?.length ? (
-                  vet.servicesOffered.map((service, index) => (
-                    <span
-                      key={index}
-                      className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
-                    >
-                      {service}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-sm text-slate-500">No services specified</span>
-                )}
-              </div>
+          <div className="clinic-hero-side">
+            <div className="clinic-owner-label">Contact</div>
+            <div className="clinic-owner-name">{vet.contactNumber}</div>
+            <div className="clinic-owner-meta">
+              {workingHoursLabel}
+              <br />
+              {workingDaysLabel}
             </div>
-          </section>
+          </div>
+        </section>
 
-          <ClinicReviewsPanel clinicId={vet._id} onReviewStatsChange={handleReviewStatsChange} />
-        </div>
+        <section className="clinic-page-card">
+          <div className="clinic-section-head">
+            <div>
+              <div className="clinic-section-kicker">Overview</div>
+              <h3>Clinic snapshot</h3>
+            </div>
+          </div>
 
-        <aside className="space-y-6 xl:sticky xl:top-28 xl:self-start">
+          <div className="clinic-stat-grid">
+            <StatBox label="Status" value={vet.isOpenNow ? 'Open now' : 'Closed now'} />
+            <StatBox label="Consultation fee" value={`৳ ${vet.consultationFee}`} />
+            <StatBox label="Contact" value={vet.contactNumber} />
+            <StatBox label="Rating" value={`${ratingValue} (${totalReviewsLabel})`} />
+            <StatBox label="Working hours" value={workingHoursLabel} />
+            <StatBox label="Working days" value={workingDaysLabel} />
+          </div>
+        </section>
+
+        <section className="clinic-page-card">
+          <div className="clinic-section-head">
+            <div>
+              <div className="clinic-section-kicker">Services</div>
+              <h3>Care and treatments offered</h3>
+            </div>
+          </div>
+
+          <div className="clinic-service-tags">
+            {vet.servicesOffered?.length ? (
+              vet.servicesOffered.map((service, index) => (
+                <span key={index} className="clinic-service-tag">
+                  {service}
+                </span>
+              ))
+            ) : (
+              <span className="clinic-muted-copy">No services specified</span>
+            )}
+          </div>
+        </section>
+
+        <section className="clinic-page-split">
           {vet.owner && (
-            <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-              <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Clinic owner
+            <div className="clinic-page-card">
+              <div className="clinic-section-head">
+                <div>
+                  <div className="clinic-section-kicker">Owner</div>
+                  <h3>Clinic owner</h3>
+                </div>
               </div>
-              <div className="mt-4 font-display text-3xl font-bold text-[#002045]">
-                {vet.owner.name}
+
+              <div className="clinic-owner-card-copy">
+                <div className="clinic-owner-name">{vet.owner.name}</div>
+                <p>{vet.owner.email}</p>
               </div>
-              <p className="mt-2 text-sm text-slate-600">{vet.owner.email}</p>
             </div>
           )}
 
-          <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-            {mapUrl ? (
-              <iframe
-                title="vet-map"
-                src={mapUrl}
-                className="h-[420px] w-full border-0"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            ) : (
-              <div className="flex h-[420px] items-center justify-center bg-slate-100 text-slate-500">
-                Map preview is not available for this clinic.
+          <div className="clinic-page-card clinic-map-card">
+            <div className="clinic-section-head">
+              <div>
+                <div className="clinic-section-kicker">Location</div>
+                <h3>Map preview</h3>
               </div>
-            )}
+            </div>
+
+            <div className="clinic-map-shell">
+              {mapUrl ? (
+                <iframe
+                  title="vet-map"
+                  src={mapUrl}
+                  className="clinic-map-frame"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              ) : (
+                <div className="clinic-map-empty">
+                  Map preview is not available for this clinic.
+                </div>
+              )}
+            </div>
           </div>
-        </aside>
+        </section>
+
+        <ClinicReviewsPanel
+          clinicId={vet._id}
+          clinicName={vet.clinicName}
+          onReviewStatsChange={handleReviewStatsChange}
+        />
       </div>
     </SiteLayout>
   );

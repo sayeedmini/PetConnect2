@@ -28,11 +28,11 @@ function PrescriptionVerificationPage() {
   }, [verificationCode]);
 
   return (
-    <div style={{ padding: '30px' }}>
-      <Link to="/">← Back to Home</Link>
+    <div style={styles.page}>
+      <Link to="/" style={styles.backLink}>Back to Home</Link>
 
       <div style={styles.card}>
-        <h1>Prescription Verification</h1>
+        <h1 style={styles.title}>Prescription Verification</h1>
 
         {loading ? (
           <p>Verifying prescription...</p>
@@ -59,13 +59,27 @@ function PrescriptionVerificationPage() {
 }
 
 const styles = {
+  page: {
+    padding: '30px',
+    color: '#0f172a',
+  },
   card: {
     marginTop: '18px',
-    background: '#fff',
+    background: '#ffffff',
+    color: '#0f172a',
     borderRadius: '18px',
     padding: '24px',
     boxShadow: '0 12px 28px rgba(0,0,0,0.08)',
     maxWidth: '760px',
+  },
+  title: {
+    color: '#0f172a',
+    marginBottom: '16px',
+  },
+  backLink: {
+    color: '#0f172a',
+    fontWeight: 600,
+    textDecoration: 'none',
   },
   verifiedBadge: {
     display: 'inline-block',

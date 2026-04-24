@@ -168,7 +168,7 @@ function MyAppointmentsPage() {
                         </div>
                       </div>
 
-                      <div className="mt-5 grid gap-3 md:grid-cols-3">
+                      <div className="mt-5 grid gap-3 md:grid-cols-2">
                         <div className="rounded-2xl bg-white p-4">
                           <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Reason</div>
                           <div className="mt-2 text-sm font-medium text-slate-700">{appointment.reason || 'Not specified'}</div>
@@ -177,12 +177,6 @@ function MyAppointmentsPage() {
                           <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Reminder</div>
                           <div className="mt-2 text-sm font-medium text-slate-700">
                             {appointment.reminderAt ? new Date(appointment.reminderAt).toLocaleString() : 'Not scheduled'}
-                          </div>
-                        </div>
-                        <div className="rounded-2xl bg-white p-4">
-                          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Calendar</div>
-                          <div className="mt-2 text-sm font-medium text-slate-700">
-                            {appointment.calendarSync?.message || 'No sync message'}
                           </div>
                         </div>
                       </div>

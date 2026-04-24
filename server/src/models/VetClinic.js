@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 
+const WEEK_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DEFAULT_CLINIC_IMAGE = '/clinic-default.svg';
+
 const vetClinicSchema = new mongoose.Schema(
   {
     owner: {
@@ -38,6 +41,15 @@ const vetClinicSchema = new mongoose.Schema(
         trim: true,
       },
     },
+    workingDays: {
+      type: [String],
+      enum: WEEK_DAYS,
+      default: WEEK_DAYS.slice(1, 6),
+    },
+    appointmentsEnabled: {
+      type: Boolean,
+      default: true,
+    },
     consultationFee: {
       type: Number,
       required: true,
@@ -53,6 +65,11 @@ const vetClinicSchema = new mongoose.Schema(
       type: Number,
       default: 0,
       min: 0,
+    },
+    clinicImage: {
+      type: String,
+      trim: true,
+      default: DEFAULT_CLINIC_IMAGE,
     },
     location: {
       type: {

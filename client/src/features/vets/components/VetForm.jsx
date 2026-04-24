@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import ClinicLocationPicker from './ClinicLocationPicker';
 import { createVet, updateVet } from '../services/vetApi';
 
+const WEEK_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 const emptyForm = {
   clinicName: '',
   address: '',
@@ -12,6 +14,8 @@ const emptyForm = {
   consultationFee: '',
   latitude: '',
   longitude: '',
+  workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+  appointmentsEnabled: true,
 };
 
 function VetForm({ initialData = null, isEdit = false, onSuccess }) {
@@ -33,6 +37,11 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
         consultationFee: initialData.consultationFee || '',
         latitude: initialData.latitude || '',
         longitude: initialData.longitude || '',
+        workingDays:
+          Array.isArray(initialData.workingDays) && initialData.workingDays.length
+            ? initialData.workingDays
+            : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+        appointmentsEnabled: initialData.appointmentsEnabled !== false,
       });
     } else {
       setFormData(emptyForm);
@@ -40,10 +49,25 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
   }, [initialData]);
 
   const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: type === 'checkbox' ? checked : value,
     }));
+  };
+
+  const handleWorkingDayToggle = (day) => {
+    setFormData((prev) => {
+      const nextWorkingDays = prev.workingDays.includes(day)
+        ? prev.workingDays.filter((item) => item !== day)
+        : [...prev.workingDays, day];
+
+      return {
+        ...prev,
+        workingDays: nextWorkingDays,
+      };
+    });
   };
 
   const handleMapLocationSelect = useCallback((position) => {
@@ -85,6 +109,11 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
       return;
     }
 
+    if (!formData.workingDays.length) {
+      alert('Please select at least one working day');
+      return;
+    }
+
     const payload = {
       clinicName: formData.clinicName,
       address: formData.address,
@@ -95,6 +124,8 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
         .filter(Boolean),
       openTime: formData.openTime,
       closeTime: formData.closeTime,
+      workingDays: formData.workingDays,
+      appointmentsEnabled: formData.appointmentsEnabled,
       consultationFee: Number(formData.consultationFee),
       latitude: Number(formData.latitude),
       longitude: Number(formData.longitude),
@@ -216,12 +247,58 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
             />
           </label>
 
+          <div className="block md:col-span-2">
+            <span className="mb-3 block text-sm font-semibold text-slate-700">Working days</span>
+            <div className="flex flex-wrap gap-3">
+              {WEEK_DAYS.map((day) => {
+                const isSelected = formData.workingDays.includes(day);
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => handleWorkingDayToggle(day)}
+                    className={[
+                      'rounded-full px-4 py-2 text-sm font-medium transition',
+                      isSelected
+                        ? 'bg-teal-100 text-teal-800 ring-1 ring-teal-200'
+                        : 'border border-slate-300 bg-white text-slate-700 hover:border-teal-200 hover:bg-teal-50',
+                    ].join(' ')}
+                  >
+                    {day}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-2 text-sm text-slate-500">
+              Choose the days when this clinic should accept appointments.
+            </div>
+          </div>
+
+          <label className="block md:col-span-2">
+            <span className="mb-3 block text-sm font-semibold text-slate-700">Appointments</span>
+            <div className="flex items-center justify-between rounded-[24px] border border-slate-300 bg-slate-50 px-4 py-4">
+              <div>
+                <div className="font-semibold text-[#002045]">Accept new appointments</div>
+                <div className="mt-1 text-sm text-slate-600">
+                  Turn this off when you do not want pet owners to book this clinic.
+                </div>
+              </div>
+              <input
+                name="appointmentsEnabled"
+                type="checkbox"
+                checked={formData.appointmentsEnabled}
+                onChange={handleChange}
+                className="h-5 w-5 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+              />
+            </div>
+          </label>
+
           <div className="md:col-span-2 rounded-[24px] bg-slate-50 p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="text-sm font-semibold text-[#002045]">Clinic location</div>
                 <div className="mt-1 text-sm text-slate-600">
-                  Click directly on the map to save the clinic coordinates.
+                  Click directly on the map to save the clinic location.
                 </div>
               </div>
               <button
@@ -242,30 +319,6 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
               />
             </div>
           </div>
-
-          <label className="block">
-            <span className="mb-2 block text-sm font-semibold text-slate-700">Latitude</span>
-            <input
-              name="latitude"
-              value={formData.latitude}
-              readOnly
-              placeholder="Pick from map"
-              required
-              className="w-full rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-slate-700 outline-none"
-            />
-          </label>
-
-          <label className="block">
-            <span className="mb-2 block text-sm font-semibold text-slate-700">Longitude</span>
-            <input
-              name="longitude"
-              value={formData.longitude}
-              readOnly
-              placeholder="Pick from map"
-              required
-              className="w-full rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-slate-700 outline-none"
-            />
-          </label>
 
           <div className="md:col-span-2">
             <button
@@ -288,15 +341,13 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
       <div className="space-y-6 xl:sticky xl:top-28 xl:self-start">
         <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
           <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Saved coordinates
+            Location status
           </div>
           <div className="mt-4 font-display text-3xl font-bold text-[#002045]">
-            {formData.latitude && formData.longitude
-              ? `${formData.latitude}, ${formData.longitude}`
-              : 'Waiting for selection'}
+            {formData.latitude && formData.longitude ? 'Location selected' : 'Waiting for selection'}
           </div>
           <p className="mt-3 text-sm leading-7 text-slate-600">
-            The clinic marker will stay synced with the selected latitude and longitude.
+            The clinic marker will stay synced with the selected map location.
           </p>
         </div>
 
@@ -305,9 +356,10 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
             Good practice
           </div>
           <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
-            <li>• Use the exact clinic entrance location so users can navigate correctly.</li>
-            <li>• Keep opening and closing hours aligned with your real appointment schedule.</li>
-            <li>• Ratings are now generated from real reviews, not typed manually.</li>
+            <li>Use the exact clinic entrance location so users can navigate correctly.</li>
+            <li>Keep working days and opening hours aligned with your real appointment schedule.</li>
+            <li>Turn off appointments anytime if you need to pause new bookings.</li>
+            <li>Ratings are now generated from real reviews, not typed manually.</li>
           </ul>
         </div>
       </div>

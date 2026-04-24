@@ -29,6 +29,11 @@ function BookAppointmentPage() {
   const [slots, setSlots] = useState([]);
   const [saving, setSaving] = useState(false);
 
+  const appointmentsEnabled = clinic?.appointmentsEnabled !== false;
+  const workingDaysLabel = Array.isArray(clinic?.workingDays) && clinic.workingDays.length
+    ? clinic.workingDays.join(', ')
+    : 'Working days not provided';
+
   useEffect(() => {
     const fetchClinic = async () => {
       try {
@@ -56,7 +61,9 @@ function BookAppointmentPage() {
         const nextSlots = response.slots || [];
         setSlots(nextSlots);
 
-        if (nextSlots.length === 0) {
+        if (response.clinic?.appointmentsEnabled === false) {
+          setSlotNotice('This clinic is not accepting appointments right now.');
+        } else if (nextSlots.length === 0) {
           setSlotNotice(`No appointment slots are available on ${formatFriendlyDate(dateValue)}.`);
         } else {
           setSlotNotice('');
@@ -75,6 +82,14 @@ function BookAppointmentPage() {
 
   const findNextAvailableDate = useCallback(async () => {
     const startDate = formatDateInputValue();
+
+    if (clinic?.appointmentsEnabled === false) {
+      return {
+        date: startDate,
+        slots: [],
+        dayOffset: null,
+      };
+    }
 
     for (let dayOffset = 0; dayOffset < MAX_SLOT_LOOKAHEAD_DAYS; dayOffset += 1) {
       const candidateDate = addDaysToDateInputValue(startDate, dayOffset);
@@ -95,7 +110,7 @@ function BookAppointmentPage() {
       slots: [],
       dayOffset: null,
     };
-  }, [clinicId]);
+  }, [clinic?.appointmentsEnabled, clinicId]);
 
   useEffect(() => {
     if (loadingClinic || !clinicId) {
@@ -121,7 +136,9 @@ function BookAppointmentPage() {
           appointmentDate: nextAvailable.date,
         }));
 
-        if (nextAvailable.slots.length === 0) {
+        if (clinic?.appointmentsEnabled === false) {
+          setSlotNotice('This clinic is not accepting appointments right now.');
+        } else if (nextAvailable.slots.length === 0) {
           setSlotNotice('No appointment slots were found for this clinic in the next 14 days.');
         } else if (nextAvailable.dayOffset > 0) {
           setSlotNotice(`Showing the next available date: ${formatFriendlyDate(nextAvailable.date)}.`);
@@ -145,7 +162,7 @@ function BookAppointmentPage() {
     return () => {
       isMounted = false;
     };
-  }, [clinicId, findNextAvailableDate, loadingClinic]);
+  }, [clinic?.appointmentsEnabled, clinicId, findNextAvailableDate, loadingClinic]);
 
   useEffect(() => {
     if (!formData.appointmentDate || loadingClinic || initializingDate) {
@@ -167,11 +184,9 @@ function BookAppointmentPage() {
 
   const totalEstimate = useMemo(() => {
     const fee = Number(clinic?.consultationFee || 0);
-    const tax = Number((fee * 0.07).toFixed(2));
     return {
       fee,
-      tax,
-      total: Number((fee + tax).toFixed(2)),
+      total: Number(fee.toFixed(2)),
     };
   }, [clinic?.consultationFee]);
 
@@ -191,6 +206,11 @@ function BookAppointmentPage() {
 
     if (!selectedSlot) {
       alert('Please select an available slot first');
+      return;
+    }
+
+    if (!appointmentsEnabled) {
+      alert('This clinic is not accepting appointments right now');
       return;
     }
 
@@ -326,6 +346,11 @@ function BookAppointmentPage() {
                 <div className="font-semibold text-[#002045]">Available slots for {formatFriendlyDate(formData.appointmentDate)}</div>
                 {slotNotice ? <div className="text-sm text-slate-500">{slotNotice}</div> : null}
               </div>
+              {!appointmentsEnabled ? (
+                <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+                  This clinic has turned off new appointments for now.
+                </div>
+              ) : null}
               <div className="mt-4">
                 <AppointmentSlotPicker
                   slots={slots}
@@ -375,6 +400,7 @@ function BookAppointmentPage() {
                   <div>
                     <div className="font-semibold text-[#002045]">{formatFriendlyDate(formData.appointmentDate)}</div>
                     <div className="text-sm text-slate-600">{selectedSlot ? `${selectedSlot.label} (${clinic.workingHours?.openTime || 'daytime clinic'})` : 'Choose a time slot'}</div>
+                    <div className="mt-1 text-xs text-slate-500">{workingDaysLabel}</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -392,10 +418,6 @@ function BookAppointmentPage() {
                 <span>Consultation Fee</span>
                 <span className="font-semibold text-[#002045]">৳ {totalEstimate.fee.toFixed(2)}</span>
               </div>
-              <div className="flex items-center justify-between py-2 text-slate-600">
-                <span>Taxes & Fees</span>
-                <span className="font-semibold text-[#002045]">৳ {totalEstimate.tax.toFixed(2)}</span>
-              </div>
               <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-4">
                 <span className="text-2xl font-bold text-[#002045]">Total Estimate</span>
                 <span className="text-4xl font-extrabold text-[#002045]">৳ {totalEstimate.total.toFixed(2)}</span>
@@ -404,10 +426,14 @@ function BookAppointmentPage() {
               <button
                 type="submit"
                 form="booking-form"
-                disabled={saving || loadingSlots}
+                disabled={saving || loadingSlots || !appointmentsEnabled}
                 className="mt-6 w-full rounded-2xl bg-[#002045] px-5 py-4 text-base font-semibold text-white transition hover:bg-[#1A365D] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {saving ? 'Confirming appointment...' : 'Confirm Appointment'}
+                {!appointmentsEnabled
+                  ? 'Appointments Unavailable'
+                  : saving
+                    ? 'Confirming appointment...'
+                    : 'Confirm Appointment'}
               </button>
             </div>
           </section>
