@@ -2,7 +2,7 @@
   "name": "petconnect",
   "private": true,
   "version": "1.0.0",
-  "description": "PetConnect shared MERN base project",
+  "description": "PetConnect MERN project",
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "server": "npm run dev --prefix server",
