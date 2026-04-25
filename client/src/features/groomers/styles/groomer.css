@@ -1,0 +1,100 @@
+/* ============================================================
+   PetConnect — Global Styles & Design System
+   ============================================================ */
+
+/* --- Theme Variables (:root) --- */
+/* These variables define the "Single Source of Truth" for our colors and spacing */
+:root {
+  /* Brand Colors (Teal Palette) */
+  --color-primary: #0d9488;
+  --color-primary-hover: #0f766e;
+  --color-primary-light: #ccfbf1;
+  --color-primary-border: #99f6e4;
+  
+  /* Status Colors */
+  --color-success: #16a34a;
+  --color-warning: #f59e0b;
+  
+  /* Neutral Palette */
+  --color-bg: #f8fafc;
+  --color-white: #ffffff;
+  --color-text: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+  --color-border: #e2e8f0;
+  
+  /* Elevations & Shadows */
+  --color-card-shadow: rgba(0, 0, 0, 0.06);
+  --color-card-hover-shadow: rgba(79, 70, 229, 0.12);
+  
+  /* Layout tokens */
+  --radius: 10px;
+  --radius-lg: 14px;
+  --transition: 0.2s ease;
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* --- Reset & Base Styles --- */
+/* Ensures all browsers start with the same padding and box-sizing logic */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box; /* Padding doesn't increase element width */
+}
+
+body {
+  font-family: var(--font);
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased; /* Smoother text rendering on MacOS */
+}
+
+/* Base link behavior */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Ensure images don't overflow their containers */
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* Standardize button behavior */
+button {
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  background: none;
+}
+
+/* --- Global Loading Spinner --- */
+/* Container to center the spinner on the screen */
+.spinner-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+/* The actual rotating ring */
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary); /* Only the top border has color to show rotation */
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite; /* Smooth continuous rotation */
+}
+
+/* Keyframes for the 'spin' animation used above */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+

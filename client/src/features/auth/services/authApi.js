@@ -9,6 +9,7 @@ export const registerUser = async (formData) => {
     name: formData.name,
     email: formData.email,
     password: formData.password,
+    role: formData.role,
   };
 
   const { data } = await API.post('/register', payload);

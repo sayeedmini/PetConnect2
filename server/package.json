@@ -4,7 +4,9 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "seed:groomers": "node seed-groomers.js",
+    "seed:catalog": "node seed-catalog.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -13,7 +15,9 @@
     "express": "^4.21.2",
     "googleapis": "^144.0.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.9.5"
+    "mongoose": "^8.9.5",
+    "socket.io": "^4.8.3",
+    "multer": "^2.1.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

@@ -106,13 +106,15 @@ function VetListPage() {
     fetchVets(defaultFilters);
   };
 
+  const formatFee = (fee) => (fee === null || fee === undefined ? 'BDT N/A' : `BDT ${fee}`);
+
   return (
     <SiteLayout compact>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
         <section className="flex flex-col gap-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex flex-col gap-2">
-              <h1 className="font-display text-5xl font-extrabold tracking-tight text-[#002045]">
+              <h1 className="font-display text-4xl font-extrabold tracking-tight text-[#002045] sm:text-5xl">
                 Find Veterinary Clinics
               </h1>
               <p className="text-lg text-slate-600">Discover top-rated veterinary care near you.</p>
@@ -182,18 +184,18 @@ function VetListPage() {
               </label>
 
               <button
-                className="flex h-[46px] items-center justify-center rounded-xl bg-[#002045] px-8 text-sm font-semibold text-white transition hover:bg-[#1A365D]"
+                className="flex h-[46px] w-full min-w-[120px] shrink-0 items-center justify-center rounded-xl bg-blue-200 px-8 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-blue-300 md:w-auto"
                 type="submit"
               >
                 Search
               </button>
             </div>
 
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 flex justify-start md:justify-end">
               <button
                 type="button"
                 onClick={handleReset}
-                className="flex h-[46px] items-center justify-center rounded-xl bg-teal-600 px-8 text-sm font-semibold text-white transition hover:bg-teal-700"
+                className="flex h-[46px] w-full min-w-[120px] items-center justify-center rounded-xl bg-green-200 px-8 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-green-300 md:w-auto"
               >
                 Reset
               </button>
@@ -257,7 +259,7 @@ function VetListPage() {
                           className="h-full w-full object-cover"
                         />
                         <div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[#002045] shadow-sm">
-                          {hasReviews ? `★ ${ratingValue.toFixed(1)}` : 'No reviews yet'}
+                          {hasReviews ? `Rating ${ratingValue.toFixed(1)}` : 'No reviews yet'}
                         </div>
                         <div className="absolute bottom-3 left-3 flex gap-2">
                           <span
@@ -300,7 +302,7 @@ function VetListPage() {
                         <div className="mt-6 flex items-center justify-between border-t border-slate-200 pt-4">
                           <div>
                             <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Consultation</div>
-                            <div className="mt-1 text-xl font-bold text-[#002045]">৳ {clinic.consultationFee ?? 'N/A'}</div>
+                            <div className="mt-1 text-xl font-bold text-[#002045]">{formatFee(clinic.consultationFee)}</div>
                           </div>
                           <Link
                             to={`/vets/${clinicId}`}

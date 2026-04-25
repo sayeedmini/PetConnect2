@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import SiteLayout from '../../../components/SiteLayout';
-import { formatFriendlyDate, addDaysToDateInputValue, formatDateInputValue } from '../../../utils/date';
+import {
+  formatFriendlyDate,
+  addDaysToDateInputValue,
+  formatDateInputValue,
+} from '../../../utils/date';
 import { getVetById } from '../../vets/services/vetApi';
 import AppointmentSlotPicker from '../components/AppointmentSlotPicker';
 import { bookAppointment, getAvailableSlots } from '../services/appointmentApi';
@@ -30,9 +34,10 @@ function BookAppointmentPage() {
   const [saving, setSaving] = useState(false);
 
   const appointmentsEnabled = clinic?.appointmentsEnabled !== false;
-  const workingDaysLabel = Array.isArray(clinic?.workingDays) && clinic.workingDays.length
-    ? clinic.workingDays.join(', ')
-    : 'Working days not provided';
+  const workingDaysLabel =
+    Array.isArray(clinic?.workingDays) && clinic.workingDays.length
+      ? clinic.workingDays.join(', ')
+      : 'Working days not provided';
 
   useEffect(() => {
     const fetchClinic = async () => {
@@ -239,19 +244,38 @@ function BookAppointmentPage() {
 
   if (loadingClinic) {
     return (
-      <SiteLayout compact backTo={`/vets/${clinicId}`} backLabel="Back to clinic" title="Book appointment" subtitle="Loading clinic information...">
-        <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-slate-600 shadow-sm">Loading clinic...</div>
+      <SiteLayout
+        compact
+        backTo={`/vets/${clinicId}`}
+        backLabel="Back to clinic"
+        title="Book appointment"
+        subtitle="Loading clinic information..."
+      >
+        <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-slate-600 shadow-sm">
+          Loading clinic...
+        </div>
       </SiteLayout>
     );
   }
 
   if (!clinic) {
     return (
-      <SiteLayout compact backTo="/vets" backLabel="Back to clinics" title="Clinic not found" subtitle="The selected clinic could not be loaded.">
-        <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-slate-600 shadow-sm">Clinic not found.</div>
+      <SiteLayout
+        compact
+        backTo="/vets"
+        backLabel="Back to clinics"
+        title="Clinic not found"
+        subtitle="The selected clinic could not be loaded."
+      >
+        <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-slate-600 shadow-sm">
+          Clinic not found.
+        </div>
       </SiteLayout>
     );
   }
+
+  const formattedConsultationFee = `BDT ${totalEstimate.fee.toFixed(2)}`;
+  const formattedTotalEstimate = `BDT ${totalEstimate.total.toFixed(2)}`;
 
   return (
     <SiteLayout
@@ -265,7 +289,9 @@ function BookAppointmentPage() {
       <div className="grid gap-8 xl:grid-cols-[1fr_380px]">
         <form id="booking-form" onSubmit={handleSubmit} className="space-y-6">
           <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] lg:p-7">
-            <h2 className="font-display text-3xl font-bold text-[#002045]">Patient Details</h2>
+            <h2 className="font-display text-2xl font-bold text-[#002045] sm:text-3xl">
+              Patient Details
+            </h2>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <label className="block">
                 <span className="mb-2 block text-sm font-semibold text-slate-700">Pet Name</span>
@@ -324,11 +350,17 @@ function BookAppointmentPage() {
           <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] lg:p-7">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <h2 className="font-display text-3xl font-bold text-[#002045]">Date & Time</h2>
-                <p className="mt-2 text-sm text-slate-600">Choose the appointment date first, then select any available slot.</p>
+                <h2 className="font-display text-2xl font-bold text-[#002045] sm:text-3xl">
+                  Date & Time
+                </h2>
+                <p className="mt-2 text-sm text-slate-600">
+                  Choose the appointment date first, then select any available slot.
+                </p>
               </div>
               <label className="block max-w-xs">
-                <span className="mb-2 block text-sm font-semibold text-slate-700">Appointment date</span>
+                <span className="mb-2 block text-sm font-semibold text-slate-700">
+                  Appointment date
+                </span>
                 <input
                   type="date"
                   name="appointmentDate"
@@ -343,7 +375,9 @@ function BookAppointmentPage() {
 
             <div className="mt-6 rounded-[24px] bg-slate-50 p-5">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="font-semibold text-[#002045]">Available slots for {formatFriendlyDate(formData.appointmentDate)}</div>
+                <div className="font-semibold text-[#002045]">
+                  Available slots for {formatFriendlyDate(formData.appointmentDate)}
+                </div>
                 {slotNotice ? <div className="text-sm text-slate-500">{slotNotice}</div> : null}
               </div>
               {!appointmentsEnabled ? (
@@ -363,9 +397,13 @@ function BookAppointmentPage() {
           </section>
 
           <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] lg:p-7">
-            <h2 className="font-display text-3xl font-bold text-[#002045]">Symptoms & Notes</h2>
+            <h2 className="font-display text-2xl font-bold text-[#002045] sm:text-3xl">
+              Symptoms & Notes
+            </h2>
             <label className="mt-5 block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Additional notes for the vet</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">
+                Additional notes for the vet
+              </span>
               <textarea
                 name="notes"
                 rows="6"
@@ -385,8 +423,10 @@ function BookAppointmentPage() {
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#DDEAFE] text-2xl font-bold text-[#002045]">
                   V
                 </div>
-                <div>
-                  <h3 className="font-display text-3xl font-bold text-[#002045]">{clinic.clinicName}</h3>
+                <div className="min-w-0">
+                  <h3 className="font-display text-2xl font-bold text-[#002045] sm:text-3xl">
+                    {clinic.clinicName}
+                  </h3>
                   <p className="mt-1 text-slate-600">{clinic.owner?.name || 'Veterinary team'}</p>
                   <p className="mt-2 text-sm text-slate-500">{clinic.address}</p>
                 </div>
@@ -396,18 +436,32 @@ function BookAppointmentPage() {
             <div className="border-t border-slate-200 bg-slate-50 p-6">
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-100 text-teal-700">🗓</div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-100 text-xs font-bold uppercase tracking-[0.14em] text-teal-700">
+                    Date
+                  </div>
                   <div>
-                    <div className="font-semibold text-[#002045]">{formatFriendlyDate(formData.appointmentDate)}</div>
-                    <div className="text-sm text-slate-600">{selectedSlot ? `${selectedSlot.label} (${clinic.workingHours?.openTime || 'daytime clinic'})` : 'Choose a time slot'}</div>
+                    <div className="font-semibold text-[#002045]">
+                      {formatFriendlyDate(formData.appointmentDate)}
+                    </div>
+                    <div className="text-sm text-slate-600">
+                      {selectedSlot
+                        ? `${selectedSlot.label} (${clinic.workingHours?.openTime || 'daytime clinic'})`
+                        : 'Choose a time slot'}
+                    </div>
                     <div className="mt-1 text-xs text-slate-500">{workingDaysLabel}</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#DDEAFE] text-[#002045]">🐾</div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#DDEAFE] text-xs font-bold uppercase tracking-[0.14em] text-[#002045]">
+                    Pet
+                  </div>
                   <div>
                     <div className="font-semibold text-[#002045]">{formData.reason}</div>
-                    <div className="text-sm text-slate-600">{formData.petName ? `For ${formData.petName} (${formData.petType})` : `Species: ${formData.petType}`}</div>
+                    <div className="text-sm text-slate-600">
+                      {formData.petName
+                        ? `For ${formData.petName} (${formData.petType})`
+                        : `Species: ${formData.petType}`}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -416,13 +470,17 @@ function BookAppointmentPage() {
             <div className="border-t border-slate-200 p-6">
               <div className="flex items-center justify-between py-2 text-slate-600">
                 <span>Consultation Fee</span>
-                <span className="font-semibold text-[#002045]">৳ {totalEstimate.fee.toFixed(2)}</span>
+                <span className="font-semibold text-[#002045]">{formattedConsultationFee}</span>
               </div>
-              <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-4">
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
                 <span className="text-2xl font-bold text-[#002045]">Total Estimate</span>
-                <span className="text-4xl font-extrabold text-[#002045]">৳ {totalEstimate.total.toFixed(2)}</span>
+                <span className="text-3xl font-extrabold text-[#002045] sm:text-4xl">
+                  {formattedTotalEstimate}
+                </span>
               </div>
-              <p className="mt-2 text-sm text-slate-500">Payment is collected at the clinic after your visit.</p>
+              <p className="mt-2 text-sm text-slate-500">
+                Payment is collected at the clinic after your visit.
+              </p>
               <button
                 type="submit"
                 form="booking-form"
@@ -448,7 +506,9 @@ function BookAppointmentPage() {
                 referrerPolicy="no-referrer-when-downgrade"
               />
             ) : (
-              <div className="flex h-72 items-center justify-center bg-slate-100 text-slate-500">Location preview is not available for this clinic.</div>
+              <div className="flex h-72 items-center justify-center bg-slate-100 text-slate-500">
+                Location preview is not available for this clinic.
+              </div>
             )}
           </section>
         </aside>

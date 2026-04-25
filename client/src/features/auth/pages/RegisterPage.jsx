@@ -11,6 +11,7 @@ function RegisterPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    role: 'petOwner',
     password: '',
     confirmPassword: '',
   });
@@ -48,7 +49,7 @@ function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+    if (!formData.name || !formData.email || !formData.role || !formData.password || !formData.confirmPassword) {
       alert('Please fill in all fields');
       return;
     }
@@ -70,6 +71,7 @@ function RegisterPage() {
         name: formData.name,
         email: formData.email,
         password: formData.password,
+        role: formData.role,
       };
 
       const data = await registerUser(payload);
@@ -119,6 +121,23 @@ function RegisterPage() {
           Create Account
         </h1>
 
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          style={{
+            marginBottom: '16px',
+            padding: '10px 14px',
+            borderRadius: '10px',
+            border: '1px solid #d1d5db',
+            background: '#fff',
+            color: '#002045',
+            fontWeight: '600',
+            cursor: 'pointer',
+          }}
+        >
+          Back
+        </button>
+
         <p
           style={{
             marginBottom: '24px',
@@ -161,6 +180,23 @@ function RegisterPage() {
               disabled={loading}
               style={inputStyle}
             />
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label htmlFor="role" style={labelStyle}>
+              Account Type
+            </label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              disabled={loading}
+              style={inputStyle}
+            >
+              <option value="petOwner">Pet Owner</option>
+              <option value="rescuer">Rescuer</option>
+            </select>
           </div>
 
           <div style={{ marginBottom: '16px' }}>

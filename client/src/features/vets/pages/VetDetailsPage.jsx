@@ -118,6 +118,10 @@ function VetDetailsPage() {
     Array.isArray(vet.workingDays) && vet.workingDays.length
       ? vet.workingDays.join(', ')
       : 'Working days not provided';
+  const consultationFeeLabel =
+    vet.consultationFee === null || vet.consultationFee === undefined
+      ? 'BDT N/A'
+      : `BDT ${vet.consultationFee}`;
 
   return (
     <SiteLayout
@@ -209,7 +213,7 @@ function VetDetailsPage() {
 
           <div className="clinic-stat-grid">
             <StatBox label="Status" value={vet.isOpenNow ? 'Open now' : 'Closed now'} />
-            <StatBox label="Consultation fee" value={`৳ ${vet.consultationFee}`} />
+            <StatBox label="Consultation fee" value={consultationFeeLabel} />
             <StatBox label="Contact" value={vet.contactNumber} />
             <StatBox label="Rating" value={`${ratingValue} (${totalReviewsLabel})`} />
             <StatBox label="Working hours" value={workingHoursLabel} />
