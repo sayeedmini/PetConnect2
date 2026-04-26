@@ -50,7 +50,7 @@ const ReportSuccessPage = () => {
               fontSize: "34px",
             }}
           >
-            âœ…
+           ✅ 
           </div>
 
           <h1
@@ -147,51 +147,6 @@ const ReportSuccessPage = () => {
                 {status}
               </span>
             </div>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            <button
-              onClick={() => navigate("/rescue/dashboard")}
-              style={{
-                padding: "14px 24px",
-                background: "linear-gradient(135deg, #5f5aa2, #2f6f8f)",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "12px",
-                cursor: "pointer",
-                fontWeight: "700",
-                fontSize: "16px",
-                boxShadow: "0 10px 25px rgba(37, 99, 235, 0.25)",
-                transition: "0.2s ease",
-              }}
-            >
-              Dashboard
-            </button>
-
-            <button
-              onClick={() => navigate("/rescue/tracking")}
-              style={{
-                marginTop: "14px",
-                padding: "14px 24px",
-                background: "linear-gradient(135deg, #5f5aa2, #2f6f8f)",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "12px",
-                cursor: "pointer",
-                fontWeight: "700",
-                fontSize: "16px",
-                boxShadow: "0 10px 25px rgba(47, 111, 143, 0.25)",
-                transition: "0.2s ease",
-              }}
-            >
-              Track My Rescue
-            </button>
           </div>
         </div>
       </div>

@@ -126,13 +126,23 @@ function SiteLayout({
                   <span className="mx-2 text-slate-300">•</span>
                   <span className="capitalize">{user?.role || 'member'}</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="whitespace-nowrap rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
-                >
-                  Logout
-                </button>
+
+                {user?.role === 'petOwner' && (
+                  <Link
+                    to="/login"
+                    className="whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition border border-slate-200 bg-white text-slate-600 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+                  >
+                    Login as Rescuer
+                  </Link>
+                )}
+
+              <Link
+                to="/login"
+                onClick={handleLogout}
+                className="whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition border border-slate-200 bg-white text-slate-600 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+              >
+                Logout
+              </Link>
               </>
             ) : (
               <>

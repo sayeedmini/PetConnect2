@@ -181,7 +181,7 @@ const getAvailableSlots = async (req, res) => {
 
 const createAppointment = async (req, res) => {
   try {
-    if (!['petOwner', 'admin'].includes(req.user.role)) {
+    if (!['petOwner', 'admin', 'rescuer'].includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Only pet owners or admin can book appointments',
@@ -310,6 +310,8 @@ const getMyAppointments = async (req, res) => {
       query.petOwner = req.user._id;
     } else if (req.user.role === 'vet') {
       query.clinicOwner = req.user._id;
+    } else if (req.user.role === 'rescuer') {
+      query.rescuer = req.user._id;
     } else if (req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,

@@ -200,53 +200,20 @@ const EmergencyReportPage = () => {
 
   const selectedPosition = lat !== null && lng !== null ? [lat, lng] : null;
 
-  const floatingButtonStyle = {
-    border: "none",
-    borderRadius: "999px",
-    padding: "12px 22px",
-    color: "#ffffff",
-    fontWeight: "600",
-    fontSize: "15px",
-    cursor: "pointer",
-    background: "linear-gradient(135deg, #5f5aa2, #2f6f8f)",
-    boxShadow: "0 6px 18px rgba(0,0,0,0.15)",
-    transition: "all 0.2s ease",
-  };
-
-  return (
-    <SiteLayout>
+return (
+  <SiteLayout>
+    <div
+      style={{
+        backgroundImage:
+          "url('/frame-with-dogs-vector-white-background_53876-127700.avif')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        borderRadius: "24px",
+        padding: "20px",
+      }}
+    >
       <div
-        style={{
-          backgroundImage:
-            "url('/frame-with-dogs-vector-white-background_53876-127700.avif')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          borderRadius: "24px",
-          padding: "20px",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "700px",
-            margin: "0 auto 20px",
-            display: "flex",
-            justifyContent: "flex-end",
-          }}
-        >
-          <button
-            type="button"
-            onClick={handleOpenRescuerLogin}
-            style={{
-              ...floatingButtonStyle,
-              background: "linear-gradient(135deg, #5f5aa2, #2f6f8f)",
-            }}
-          >
-            Login as Rescuer
-          </button>
-        </div>
-
-        <div
         style={{
           maxWidth: "700px",
           margin: "0 auto",
@@ -254,6 +221,7 @@ const EmergencyReportPage = () => {
           borderRadius: "16px",
           padding: "30px",
           boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+          textAlign: "center",
         }}
       >
         <h1 style={{ marginBottom: "10px", fontSize: "28px", color: "#1f2937" }}>
@@ -265,8 +233,8 @@ const EmergencyReportPage = () => {
           respond.
         </p>
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: "20px" }}>
+        <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+          <div style={{ marginBottom: "20px", width: "100%" }}>
             <label
               style={{
                 display: "block",
@@ -277,6 +245,7 @@ const EmergencyReportPage = () => {
             >
               Description
             </label>
+
             <textarea
               placeholder="Describe the situation..."
               rows="5"
@@ -314,6 +283,7 @@ const EmergencyReportPage = () => {
                 borderRadius: "12px",
                 padding: "20px",
                 backgroundColor: "#f8fafc",
+                textAlign: "center",
               }}
             >
               <input
@@ -439,6 +409,7 @@ const EmergencyReportPage = () => {
                       attribution="&copy; OpenStreetMap contributors"
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
+
                     <LocationPicker
                       onPickLocation={handleManualPin}
                       selectedPosition={selectedPosition}
@@ -473,158 +444,28 @@ const EmergencyReportPage = () => {
             <p style={{ color: "red", marginBottom: "16px" }}>{submitError}</p>
           )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            style={{
-              padding: "12px 18px",
-              backgroundColor: "#16a34a",
-              color: "#fff",
-              border: "none",
-              borderRadius: "10px",
-              cursor: "pointer",
-              fontWeight: "600",
-            }}
-          >
-            {isSubmitting ? "Submitting..." : "Submit Report"}
-          </button>
+          <div style={{ display: "flex", justifyContent: "center", marginTop: "10px" }}>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                padding: "12px 18px",
+                backgroundColor: "#16a34a",
+                color: "#fff",
+                border: "none",
+                borderRadius: "10px",
+                cursor: "pointer",
+                fontWeight: "600",
+              }}
+            >
+              {isSubmitting ? "Submitting..." : "Submit Report"}
+            </button>
+          </div>
         </form>
-        </div>
-
-        {showRescuerLogin && (
-          <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(15, 23, 42, 0.4)",
-            backdropFilter: "blur(10px)",
-            WebkitBackdropFilter: "blur(10px)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "20px",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              width: "100%",
-              maxWidth: "500px",
-              backgroundColor: "rgba(255,255,255,0.6)",
-              borderRadius: "20px",
-              padding: "28px",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-              backdropFilter: "blur(12px)",
-            }}
-          >
-            <h3
-              style={{
-                margin: "0 0 18px 0",
-                color: "#1f2937",
-                fontSize: "26px",
-                textAlign: "center",
-              }}
-            >
-              Rescuer Login
-            </h3>
-
-            {/* Email */}
-            <input
-              name="email"
-              type="email"
-              placeholder="Enter rescuer email"
-              value={loginData.email}
-              onChange={handleLoginChange}
-              style={{
-                width: "100%",
-                padding: "12px 14px",
-                marginBottom: "14px",
-                borderRadius: "12px",
-                border: "1px solid rgba(255,255,255,0.35)",
-                backgroundColor: "rgba(255,255,255,0.7)",
-                color: "#111827",
-                outline: "none",
-                fontSize: "14px",
-                boxSizing: "border-box",
-              }}
-            />
-
-            {/* Password */}
-            <input
-              name="password"
-              type="password"
-              placeholder="Enter password"
-              value={loginData.password}
-              onChange={handleLoginChange}
-              style={{
-                width: "100%",
-                padding: "12px 14px",
-                marginBottom: "16px",
-                borderRadius: "12px",
-                border: "1px solid rgba(255,255,255,0.35)",
-                backgroundColor: "rgba(255,255,255,0.7)",
-                color: "#111827",
-                outline: "none",
-                fontSize: "14px",
-                boxSizing: "border-box",
-              }}
-            />
-
-            {loginError && (
-              <p style={{ color: "red", marginBottom: "12px" }}>
-                {loginError}
-              </p>
-            )}
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: "12px",
-                flexWrap: "wrap",
-              }}
-            >
-              {/* LOGIN BUTTON (your chosen color style) */}
-              <button
-                onClick={handleRescuerLogin}
-                style={{
-                  background: "linear-gradient(135deg, #5f5aa2, #2f6f8f)",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "10px",
-                  padding: "10px 20px",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  boxShadow: "0 6px 16px rgba(0,0,0,0.2)",
-                }}
-              >
-                Login
-              </button>
-
-              {/* CANCEL */}
-              <button
-                onClick={handleCloseRescuerLogin}
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.6)",
-                  color: "#111827",
-                  border: "1px solid rgba(255,255,255,0.35)",
-                  borderRadius: "10px",
-                  padding: "10px 20px",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-          </div>
-        )}
       </div>
-    </SiteLayout>
-  );
-};
+    </div>
+  </SiteLayout>
+);
+}
 
 export default EmergencyReportPage;

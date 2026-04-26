@@ -98,6 +98,7 @@ function TrackingDashboardPage() {
           borderRadius: "24px",
           overflow: "hidden",
           position: "relative",
+
         }}
       >
         <div
@@ -116,7 +117,7 @@ function TrackingDashboardPage() {
             padding: "24px",
           }}
         >
-          <h2 style={{ color: "white", marginBottom: "20px" }}>Live Rescue Dashboard</h2>
+          <h2 style={{ color: "white", marginBottom: "20px", textAlign: "center" }}>Live Rescue Dashboard</h2>
 
           <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
             <div
@@ -173,6 +174,7 @@ function TrackingDashboardPage() {
                 border: "1px solid rgba(255,255,255,0.2)",
                 maxHeight: "500px",
                 overflowY: "auto",
+                textAlign: "center",
               }}
             >
               <h3 style={{ marginBottom: "15px" }}>Active Rescues</h3>
@@ -219,6 +221,7 @@ function TrackingDashboardPage() {
                       boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
                       transition: "0.3s ease",
                       cursor: "pointer",
+                      textAlign: "center",
                     }}
                   >
                     <div style={{ marginBottom: "6px", fontSize: "14px" }}>
@@ -274,6 +277,7 @@ function TrackingDashboardPage() {
                           maxHeight: "120px",
                           overflowY: "auto",
                           paddingRight: "4px",
+                          textAlign: "center",
                         }}
                       >
                         {filteredLogs.length > 0 ? (
