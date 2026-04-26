@@ -181,6 +181,8 @@ const getMyPrescriptions = async (req, res) => {
       query.petOwner = req.user._id;
     } else if (req.user.role === 'vet') {
       query.vet = req.user._id;
+    } else if (req.user.role === 'rescuer') {
+      query.rescuer = req.user._id;
     } else if (req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,

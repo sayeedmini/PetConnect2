@@ -83,7 +83,7 @@ function App() {
         <Route
           path="/vets/:clinicId/book"
           element={
-            <ProtectedRoute allowedRoles={['petOwner', 'admin']}>
+            <ProtectedRoute allowedRoles={['petOwner', 'admin', 'rescuer']}>
               <BookAppointmentPage />
             </ProtectedRoute>
           }
@@ -92,7 +92,7 @@ function App() {
         <Route
           path="/appointments"
           element={
-            <ProtectedRoute allowedRoles={['petOwner', 'vet', 'admin']}>
+            <ProtectedRoute allowedRoles={['petOwner', 'vet', 'admin', 'rescuer']}>
               <MyAppointmentsPage />
             </ProtectedRoute>
           }
@@ -101,7 +101,7 @@ function App() {
         <Route
           path="/appointments/:appointmentId/reschedule"
           element={
-            <ProtectedRoute allowedRoles={['petOwner', 'admin']}>
+            <ProtectedRoute allowedRoles={['petOwner', 'admin', 'rescuer']}>
               <RescheduleAppointmentPage />
             </ProtectedRoute>
           }
@@ -110,7 +110,7 @@ function App() {
         <Route
           path="/appointments/:appointmentId/prescription"
           element={
-            <ProtectedRoute allowedRoles={['petOwner', 'vet', 'admin']}>
+            <ProtectedRoute allowedRoles={['petOwner', 'vet', 'admin', 'rescuer']}>
               <AppointmentPrescriptionPage />
             </ProtectedRoute>
           }
@@ -119,7 +119,7 @@ function App() {
         <Route
           path="/prescriptions"
           element={
-            <ProtectedRoute allowedRoles={['petOwner', 'vet', 'admin']}>
+            <ProtectedRoute allowedRoles={['petOwner', 'vet', 'admin', 'rescuer']}>
               <PrescriptionHistoryPage />
             </ProtectedRoute>
           }

@@ -40,6 +40,7 @@ function RescueInsightsPage() {
               padding: "20px 24px",
               boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
               marginBottom: "18px",
+              textAlign: "center",
             }}
           >
             <h1
