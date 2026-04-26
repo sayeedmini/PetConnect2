@@ -8,7 +8,11 @@ function AppointmentSlotPicker({ slots = [], selectedSlotId, onSelect, loading }
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="list" aria-label="Available appointment slots">
+    <div
+      className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+      role="list"
+      aria-label="Available appointment slots"
+    >
       {slots.map((slot) => {
         const isActive = selectedSlotId === slot.id;
 
@@ -20,13 +24,18 @@ function AppointmentSlotPicker({ slots = [], selectedSlotId, onSelect, loading }
             className={[
               'rounded-2xl border px-4 py-3 text-left transition',
               isActive
-                ? 'border-emerald-700 bg-emerald-700 text-white shadow-[0_18px_40px_rgba(4,120,87,0.22)]'
-                : 'border-slate-300 bg-white text-slate-700 hover:border-teal-300 hover:bg-teal-50',
+                ? 'border-[#16b85b] bg-[#158E4A] text-[#002045] shadow-[0_14px_32px_rgba(33,222,115,0.25)]'
+                : 'border-slate-300 bg-white text-slate-700 hover:border-[#158E4A] hover:bg-[#EFFFF5]',
             ].join(' ')}
             aria-pressed={isActive}
           >
             <div className="text-xl font-semibold">{slot.label}</div>
-            <div className={`mt-1 text-xs font-medium ${isActive ? 'text-emerald-100' : 'text-slate-500'}`}>
+
+            <div
+              className={`mt-1 text-xs font-medium ${
+                isActive ? 'text-[#002045]' : 'text-slate-500'
+              }`}
+            >
               {isActive ? 'Selected slot' : 'Tap to choose'}
             </div>
           </button>

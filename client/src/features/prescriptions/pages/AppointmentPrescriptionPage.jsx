@@ -15,6 +15,36 @@ const createMedicineRow = () => ({
   instructions: '',
 });
 
+const containerPaddingStyle = {
+  paddingLeft: '2.5rem',
+  paddingRight: '2.5rem',
+  paddingTop: '2rem',
+  paddingBottom: '2rem',
+};
+
+const smallContainerPaddingStyle = {
+  paddingLeft: '1.5rem',
+  paddingRight: '1.5rem',
+  paddingTop: '1.25rem',
+  paddingBottom: '1.25rem',
+};
+
+const headerPaddingStyle = {
+  paddingLeft: '2.5rem',
+  paddingRight: '2.5rem',
+  paddingTop: '0.75rem',
+  paddingBottom: '0.75rem',
+};
+
+const primaryButtonClassName =
+  'inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-[#002045] bg-[#002045] px-5 py-3 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-[#1A365D] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60';
+
+const secondaryButtonClassName =
+  'inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60';
+
+const dangerButtonClassName =
+  'inline-flex min-h-[40px] items-center justify-center rounded-xl border-2 border-rose-200 bg-rose-50 px-4 py-2 text-sm font-bold text-rose-700 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 hover:shadow-md';
+
 function AppointmentPrescriptionPage() {
   const { appointmentId } = useParams();
   const currentUser = getUser();
@@ -42,7 +72,9 @@ function AppointmentPrescriptionPage() {
 
       const appointmentData = appointmentResponse.data;
       const prescriptionData = prescriptionResponse.data;
-      const medicines = prescriptionData?.medicines?.length ? prescriptionData.medicines : [createMedicineRow()];
+      const medicines = prescriptionData?.medicines?.length
+        ? prescriptionData.medicines
+        : [createMedicineRow()];
 
       setAppointment(appointmentData);
       setPrescription(prescriptionData);
@@ -90,6 +122,7 @@ function AppointmentPrescriptionPage() {
     setFormData((prev) => {
       const nextMedicines = [...prev.medicines, createMedicineRow()];
       setSelectedMedicineIndex(nextMedicines.length - 1);
+
       return {
         ...prev,
         medicines: nextMedicines,
@@ -138,16 +171,60 @@ function AppointmentPrescriptionPage() {
 
   if (loading) {
     return (
-      <SiteLayout compact backTo="/appointments" backLabel="Back to appointments" title="Prescription workspace" subtitle="Loading prescription information...">
-        <div className="card"><div className="card-body helper-text">Loading prescription workspace...</div></div>
+      <SiteLayout
+        compact
+        backTo="/appointments"
+        backLabel={
+          <span className="inline-block" style={headerPaddingStyle}>
+            Back to appointments
+          </span>
+        }
+        title={
+          <span className="block" style={headerPaddingStyle}>
+            Prescription workspace
+          </span>
+        }
+        subtitle={
+          <span className="block" style={headerPaddingStyle}>
+            Loading prescription information...
+          </span>
+        }
+      >
+        <div className="card">
+          <div className="card-body helper-text" style={containerPaddingStyle}>
+            Loading prescription workspace...
+          </div>
+        </div>
       </SiteLayout>
     );
   }
 
   if (!appointment) {
     return (
-      <SiteLayout compact backTo="/appointments" backLabel="Back to appointments" title="Appointment not found" subtitle="The selected appointment could not be loaded.">
-        <div className="card"><div className="card-body empty-state">Appointment not found.</div></div>
+      <SiteLayout
+        compact
+        backTo="/appointments"
+        backLabel={
+          <span className="inline-block" style={headerPaddingStyle}>
+            Back to appointments
+          </span>
+        }
+        title={
+          <span className="block" style={headerPaddingStyle}>
+            Appointment not found
+          </span>
+        }
+        subtitle={
+          <span className="block" style={headerPaddingStyle}>
+            The selected appointment could not be loaded.
+          </span>
+        }
+      >
+        <div className="card">
+          <div className="card-body empty-state" style={containerPaddingStyle}>
+            Appointment not found.
+          </div>
+        </div>
       </SiteLayout>
     );
   }
@@ -156,22 +233,40 @@ function AppointmentPrescriptionPage() {
     <SiteLayout
       compact
       backTo="/appointments"
-      backLabel="Back to appointments"
-      eyebrow="Digital prescription"
-      title="Prescription workspace"
-      subtitle="Create, update, and organize medicines in a clearer prescription editor."
+      backLabel={
+        <span className="inline-block" style={headerPaddingStyle}>
+          Back to appointments
+        </span>
+      }
+      eyebrow={
+        <span className="inline-block" style={headerPaddingStyle}>
+          Digital prescription
+        </span>
+      }
+      title={
+        <span className="block" style={headerPaddingStyle}>
+          Prescription workspace
+        </span>
+      }
+      subtitle={
+        <span className="block max-w-4xl" style={headerPaddingStyle}>
+          Create, update, and organize medicines in a clearer prescription editor.
+        </span>
+      }
     >
-      <section className="prescription-shell">
-        <div className="prescription-patient-card">
+      <section className="prescription-shell" style={containerPaddingStyle}>
+        <div className="prescription-patient-card" style={containerPaddingStyle}>
           <div className="prescription-patient-main">
             <div className="prescription-avatar">
               {(appointment.petName || 'P').charAt(0).toUpperCase()}
             </div>
+
             <div className="prescription-patient-copy">
               <div className="prescription-patient-topline">
                 <h2>{appointment.petName}</h2>
                 <span className="prescription-chip">{appointment.petType || 'Pet'}</span>
               </div>
+
               <p>
                 <span>{appointment.clinic?.clinicName || 'Clinic not available'}</span>
                 <span className="prescription-dot" />
@@ -182,13 +277,20 @@ function AppointmentPrescriptionPage() {
             </div>
           </div>
 
-          <div className="prescription-patient-side">
+          <div className="prescription-patient-side" style={smallContainerPaddingStyle}>
             <div className="prescription-owner-label">Owner</div>
-            <div className="prescription-owner-name">{appointment.petOwner?.name || 'Not available'}</div>
+            <div className="prescription-owner-name">
+              {appointment.petOwner?.name || 'Not available'}
+            </div>
+
             <div className="prescription-status-row">
               <span className="prescription-status-pill">{appointment.status}</span>
               <span className="prescription-owner-date">
-                {prescription ? `Issued ${new Date(prescription.issuedAt || prescription.createdAt).toLocaleDateString()}` : 'Not issued yet'}
+                {prescription
+                  ? `Issued ${new Date(
+                      prescription.issuedAt || prescription.createdAt
+                    ).toLocaleDateString()}`
+                  : 'Not issued yet'}
               </span>
             </div>
           </div>
@@ -197,14 +299,23 @@ function AppointmentPrescriptionPage() {
         <div className="prescription-main-grid">
           <div className="prescription-editor-column">
             {canEditPrescription ? (
-              <form id="prescription-editor-form" onSubmit={handleSavePrescription} className="prescription-form-stack">
-                <section className="prescription-panel">
+              <form
+                id="prescription-editor-form"
+                onSubmit={handleSavePrescription}
+                className="prescription-form-stack"
+              >
+                <section className="prescription-panel" style={containerPaddingStyle}>
                   <div className="prescription-panel-head">
                     <div>
                       <p className="prescription-section-kicker">Medication</p>
                       <h3>Add medication</h3>
                     </div>
-                    <button type="button" className="prescription-ghost-button" onClick={addMedicine}>
+
+                    <button
+                      type="button"
+                      className={secondaryButtonClassName}
+                      onClick={addMedicine}
+                    >
                       + New medicine
                     </button>
                   </div>
@@ -265,7 +376,7 @@ function AppointmentPrescriptionPage() {
                   </div>
                 </section>
 
-                <section className="prescription-panel">
+                <section className="prescription-panel" style={containerPaddingStyle}>
                   <div className="prescription-panel-head">
                     <div>
                       <p className="prescription-section-kicker">Clinical notes</p>
@@ -302,7 +413,7 @@ function AppointmentPrescriptionPage() {
                 </section>
               </form>
             ) : (
-              <section className="prescription-panel">
+              <section className="prescription-panel" style={containerPaddingStyle}>
                 <div className="prescription-panel-head">
                   <div>
                     <p className="prescription-section-kicker">Saved record</p>
@@ -310,11 +421,21 @@ function AppointmentPrescriptionPage() {
                   </div>
                 </div>
 
-                <div className="prescription-readonly-copy">
-                  <p><strong>Diagnosis:</strong> {prescription?.diagnosis || 'No diagnosis recorded yet.'}</p>
-                  <p><strong>Notes:</strong> {prescription?.notes || 'No additional notes.'}</p>
+                <div className="prescription-readonly-copy" style={smallContainerPaddingStyle}>
+                  <p>
+                    <strong>Diagnosis:</strong>{' '}
+                    {prescription?.diagnosis || 'No diagnosis recorded yet.'}
+                  </p>
+
+                  <p>
+                    <strong>Notes:</strong> {prescription?.notes || 'No additional notes.'}
+                  </p>
+
                   {!prescription && (
-                    <p>Only the assigned vet or admin can create a prescription after the appointment is completed.</p>
+                    <p>
+                      Only the assigned vet or admin can create a prescription after the appointment
+                      is completed.
+                    </p>
                   )}
                 </div>
               </section>
@@ -322,20 +443,26 @@ function AppointmentPrescriptionPage() {
           </div>
 
           <aside className="prescription-sidebar">
-            <section className="prescription-panel prescription-list-panel">
+            <section className="prescription-panel prescription-list-panel" style={containerPaddingStyle}>
               <div className="prescription-panel-head">
                 <div>
                   <p className="prescription-section-kicker">Prescription list</p>
                   <h3>Medicines</h3>
                 </div>
-                <span className="prescription-count-pill">{formData.medicines.length} item{formData.medicines.length === 1 ? '' : 's'}</span>
+
+                <span className="prescription-count-pill">
+                  {formData.medicines.length} item{formData.medicines.length === 1 ? '' : 's'}
+                </span>
               </div>
 
               <div className="prescription-list-scroll">
                 {formData.medicines.map((medicine, index) => (
                   <div
                     key={index}
-                    className={`prescription-list-card ${selectedMedicineIndex === index ? 'active' : ''}`}
+                    className={`prescription-list-card ${
+                      selectedMedicineIndex === index ? 'active' : ''
+                    }`}
+                    style={smallContainerPaddingStyle}
                     onClick={() => setSelectedMedicineIndex(index)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
@@ -351,10 +478,11 @@ function AppointmentPrescriptionPage() {
                         <h4>{medicine.name || `Medicine ${index + 1}`}</h4>
                         <p>{medicine.dosage || 'Dosage not added yet'}</p>
                       </div>
+
                       {canEditPrescription && (
                         <button
                           type="button"
-                          className="prescription-delete-link"
+                          className={dangerButtonClassName}
                           onClick={(e) => {
                             e.stopPropagation();
                             removeMedicine(index);
@@ -371,14 +499,19 @@ function AppointmentPrescriptionPage() {
                     </div>
 
                     {medicine.instructions ? (
-                      <div className="prescription-list-instructions">{medicine.instructions}</div>
+                      <div className="prescription-list-instructions">
+                        {medicine.instructions}
+                      </div>
                     ) : null}
                   </div>
                 ))}
               </div>
             </section>
 
-            <section className="prescription-panel prescription-action-panel">
+            <section
+              className="prescription-panel prescription-action-panel"
+              style={containerPaddingStyle}
+            >
               <div className="prescription-panel-head">
                 <div>
                   <p className="prescription-section-kicker">Actions</p>
@@ -386,27 +519,48 @@ function AppointmentPrescriptionPage() {
                 </div>
               </div>
 
-              <div className="prescription-status-copy">
-                <p>{prescription ? 'A prescription already exists for this appointment.' : 'No prescription has been saved yet.'}</p>
-                <p><strong>Verification code:</strong> {prescription?.verificationCode || 'Pending'}</p>
+              <div className="prescription-status-copy" style={smallContainerPaddingStyle}>
+                <p>
+                  {prescription
+                    ? 'A prescription already exists for this appointment.'
+                    : 'No prescription has been saved yet.'}
+                </p>
+
+                <p>
+                  <strong>Verification code:</strong> {prescription?.verificationCode || 'Pending'}
+                </p>
               </div>
 
               <div className="prescription-action-stack">
                 {canEditPrescription && (
-                  <button type="submit" form="prescription-editor-form" className="prescription-primary-button" disabled={saving}>
-                    {saving ? 'Saving prescription...' : prescription ? 'Update prescription' : 'Issue prescription'}
+                  <button
+                    type="submit"
+                    form="prescription-editor-form"
+                    className={primaryButtonClassName}
+                    disabled={saving}
+                  >
+                    {saving
+                      ? 'Saving prescription...'
+                      : prescription
+                        ? 'Update prescription'
+                        : 'Issue prescription'}
                   </button>
                 )}
 
                 {prescription ? (
-                  <button type="button" className="prescription-secondary-button" onClick={() => downloadPrescriptionPdf(prescription)}>
+                  <button
+                    type="button"
+                    className={secondaryButtonClassName}
+                    onClick={() => downloadPrescriptionPdf(prescription)}
+                  >
                     Download PDF prescription
                   </button>
                 ) : null}
 
                 {!canEditPrescription && !prescription ? (
-                  <div className="prescription-readonly-note">
-                    Only the assigned vet or admin can create a prescription after the appointment is completed.
+                  <div className="prescription-readonly-note" style={smallContainerPaddingStyle}>
+                    Only the assigned vet or admin can create a prescription after the appointment is
+                    completed.
                   </div>
                 ) : null}
               </div>

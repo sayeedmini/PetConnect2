@@ -29,8 +29,23 @@ const sectionNavItems = {
   ],
 };
 
+const footerPaddingStyle = {
+  paddingLeft: '1.5rem',
+  paddingRight: '1.5rem',
+  paddingTop: '1.5rem',
+  paddingBottom: '1.5rem',
+};
+
+const footerSmallPaddingStyle = {
+  paddingLeft: '1.5rem',
+  paddingRight: '1.5rem',
+  paddingTop: '0.75rem',
+  paddingBottom: '0.75rem',
+};
+
 function getSection(pathname) {
   if (pathname.startsWith('/rescue')) return 'rescue';
+
   if (
     pathname.startsWith('/groomers') ||
     pathname.startsWith('/grooming') ||
@@ -38,6 +53,7 @@ function getSection(pathname) {
   ) {
     return 'groomers';
   }
+
   if (
     pathname.startsWith('/vets') ||
     pathname.startsWith('/appointments') ||
@@ -45,6 +61,7 @@ function getSection(pathname) {
   ) {
     return 'vets';
   }
+
   return 'home';
 }
 
@@ -80,10 +97,11 @@ function SiteLayout({
   const navigate = useNavigate();
   const user = getUser();
   const loggedIn = isLoggedIn();
+  const isRescuePage = location.pathname.startsWith('/rescue');
   const navItems = sectionNavItems[getSection(location.pathname)];
 
   const visibleNavItems = navItems.filter(
-  (item) => !item.roles || item.roles.includes(user?.role)
+    (item) => !item.roles || item.roles.includes(user?.role)
   );
 
   const handleLogout = () => {
@@ -100,11 +118,14 @@ function SiteLayout({
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#002045] text-lg font-black text-white shadow-[0_16px_40px_rgba(0,32,69,0.18)]">
                 P
               </div>
+
               <div>
                 <div className="font-display text-xl font-extrabold tracking-tight text-[#002045]">
                   PetConnect
                 </div>
-                <div className="text-xs text-slate-500">Pet care, grooming, rescue, and shopping</div>
+                <div className="text-xs text-slate-500">
+                  Pet care, grooming, rescue, and shopping
+                </div>
               </div>
             </Link>
           </div>
@@ -113,9 +134,9 @@ function SiteLayout({
             className="mx-1 flex min-w-0 flex-1 justify-center gap-2 overflow-x-auto px-1"
             aria-label="Section navigation"
           >
-          {visibleNavItems.map((item) => (
-            <NavItem key={`${item.label}-${item.to}`} item={item} pathname={location.pathname} />
-          ))}
+            {visibleNavItems.map((item) => (
+              <NavItem key={`${item.label}-${item.to}`} item={item} pathname={location.pathname} />
+            ))}
           </nav>
 
           <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-3">
@@ -127,22 +148,22 @@ function SiteLayout({
                   <span className="capitalize">{user?.role || 'member'}</span>
                 </div>
 
-                {user?.role === 'petOwner' && (
+                {user?.role === 'petOwner' && isRescuePage && (
                   <Link
                     to="/login"
-                    className="whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition border border-slate-200 bg-white text-slate-600 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+                    className="whitespace-nowrap rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
                   >
                     Login as Rescuer
                   </Link>
                 )}
 
-              <Link
-                to="/login"
-                onClick={handleLogout}
-                className="whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition border border-slate-200 bg-white text-slate-600 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
-              >
-                Logout
-              </Link>
+                <Link
+                  to="/login"
+                  onClick={handleLogout}
+                  className="whitespace-nowrap rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+                >
+                  Logout
+                </Link>
               </>
             ) : (
               <>
@@ -152,6 +173,7 @@ function SiteLayout({
                 >
                   Login
                 </Link>
+
                 <Link
                   to="/register"
                   className="rounded-xl bg-[#002045] px-4 py-2 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(0,32,69,0.18)] transition hover:bg-[#1A365D]"
@@ -181,42 +203,58 @@ function SiteLayout({
                       {backLabel}
                     </Link>
                   )}
+
                   {eyebrow && (
                     <div className="mb-3 inline-flex rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-teal-700 ring-1 ring-teal-200">
                       {eyebrow}
                     </div>
                   )}
+
                   {title && (
                     <h1 className="font-display text-4xl font-extrabold tracking-tight text-[#002045] sm:text-5xl">
                       {title}
                     </h1>
                   )}
+
                   {subtitle && (
                     <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
                       {subtitle}
                     </p>
                   )}
                 </div>
+
                 {actions ? <div className="flex flex-wrap items-center gap-3">{actions}</div> : null}
               </div>
             </div>
           </section>
         )}
 
-        <div className="mx-auto w-full max-w-[1700px] px-3 py-8 sm:px-4 lg:px-5">{children}</div>
+        <div className="mx-auto w-full max-w-[1700px] px-3 py-8 sm:px-4 lg:px-5">
+          {children}
+        </div>
       </main>
 
       <footer className="mt-12 border-t border-slate-200 bg-white">
-        <div className="mx-auto grid w-full max-w-[1700px] gap-10 px-3 py-10 sm:grid-cols-2 sm:px-4 lg:grid-cols-5 lg:px-5">
+        <div
+          className="mx-auto grid w-full max-w-[1700px] gap-8 sm:grid-cols-2 lg:grid-cols-5"
+          style={footerPaddingStyle}
+        >
           <div className="lg:col-span-2">
-            <div className="font-display text-2xl font-extrabold text-[#002045]">PetConnect</div>
+            <div className="font-display text-2xl font-extrabold text-[#002045]">
+              PetConnect
+            </div>
+
             <p className="mt-3 max-w-md text-sm leading-7 text-slate-600">
               Connecting pet owners with trusted clinics, grooming support, rescue response, and
               everyday pet essentials.
             </p>
           </div>
+
           <div>
-            <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">Explore</div>
+            <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
+              Explore
+            </div>
+
             <div className="mt-4 space-y-3 text-sm text-slate-600">
               <Link className="block hover:text-teal-700" to="/">
                 Product Catalog
@@ -232,8 +270,12 @@ function SiteLayout({
               </Link>
             </div>
           </div>
+
           <div>
-            <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">Account</div>
+            <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
+              Account
+            </div>
+
             <div className="mt-4 space-y-3 text-sm text-slate-600">
               <Link className="block hover:text-teal-700" to="/login">
                 Login
@@ -249,8 +291,12 @@ function SiteLayout({
               </Link>
             </div>
           </div>
+
           <div>
-            <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">Legal</div>
+            <div className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
+              Legal
+            </div>
+
             <div className="mt-4 space-y-3 text-sm text-slate-600">
               <span className="block">Privacy Policy</span>
               <span className="block">Terms of Service</span>
@@ -258,7 +304,11 @@ function SiteLayout({
             </div>
           </div>
         </div>
-        <div className="border-t border-slate-200 px-4 py-4 text-center text-sm text-slate-500">
+
+        <div
+          className="border-t border-slate-200 text-center text-sm text-slate-500"
+          style={footerSmallPaddingStyle}
+        >
           © 2026 PetConnect. All rights reserved.
         </div>
       </footer>

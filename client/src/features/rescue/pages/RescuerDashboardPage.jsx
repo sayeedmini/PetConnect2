@@ -716,16 +716,25 @@ function RescuerDashboardPage() {
                     backgroundColor: "rgba(255,255,255,0.55)",
                   }}
                 >
+                <div
+                  style={{
+                    border: "2px dashed #3b82f6",
+                    backgroundColor: "#eff6ff",
+                    padding: "16px",
+                    borderRadius: "12px",
+                    textAlign: "center",
+                  }}
+                >
                   <input
                     type="file"
                     accept="image/*"
                     onChange={(e) => setStoryImage(e.target.files[0])}
                     style={{
-                      width: "100%",
                       fontSize: "14px",
                       color: "#111827",
                     }}
                   />
+                </div>
                 </div>
 
                 <div

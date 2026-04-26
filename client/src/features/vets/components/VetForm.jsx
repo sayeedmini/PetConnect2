@@ -18,6 +18,29 @@ const emptyForm = {
   appointmentsEnabled: true,
 };
 
+const containerPaddingStyle = {
+  paddingLeft: '2.5rem',
+  paddingRight: '2.5rem',
+  paddingTop: '2rem',
+  paddingBottom: '2rem',
+};
+
+const smallContainerPaddingStyle = {
+  paddingLeft: '1.5rem',
+  paddingRight: '1.5rem',
+  paddingTop: '1.25rem',
+  paddingBottom: '1.25rem',
+};
+
+const primaryButtonClassName =
+  'inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-[#002045] bg-[#DDEAFE] px-5 py-3 text-sm font-bold text-[#002045] shadow-md transition hover:-translate-y-0.5 hover:bg-[#CFE0FF] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60';
+
+const secondaryButtonClassName =
+  'inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60';
+
+const dayButtonBaseClassName =
+  'inline-flex min-h-[44px] items-center justify-center rounded-xl border-2 px-5 py-2.5 text-sm font-bold shadow-sm transition hover:-translate-y-0.5 hover:shadow-md';
+
 function VetForm({ initialData = null, isEdit = false, onSuccess }) {
   const [formData, setFormData] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
@@ -160,7 +183,8 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
     <div className="grid gap-8 xl:grid-cols-[1fr_340px]">
       <form
         onSubmit={handleSubmit}
-        className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] lg:p-8"
+        className="rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]"
+        style={containerPaddingStyle}
       >
         <div className="grid gap-5 md:grid-cols-2">
           <label className="block md:col-span-2">
@@ -249,19 +273,21 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
 
           <div className="block md:col-span-2">
             <span className="mb-3 block text-sm font-semibold text-slate-700">Working days</span>
+
             <div className="flex flex-wrap gap-3">
               {WEEK_DAYS.map((day) => {
                 const isSelected = formData.workingDays.includes(day);
+
                 return (
                   <button
                     key={day}
                     type="button"
                     onClick={() => handleWorkingDayToggle(day)}
                     className={[
-                      'rounded-full px-4 py-2 text-sm font-medium transition',
+                      dayButtonBaseClassName,
                       isSelected
-                        ? 'bg-teal-100 text-teal-800 ring-1 ring-teal-200'
-                        : 'border border-slate-300 bg-white text-slate-700 hover:border-teal-200 hover:bg-teal-50',
+                        ? 'border-teal-300 bg-teal-50 text-teal-800'
+                        : 'border-slate-300 bg-white text-slate-700 hover:border-teal-300 hover:bg-teal-50',
                     ].join(' ')}
                   >
                     {day}
@@ -269,6 +295,7 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
                 );
               })}
             </div>
+
             <div className="mt-2 text-sm text-slate-500">
               Choose the days when this clinic should accept appointments.
             </div>
@@ -276,13 +303,18 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
 
           <label className="block md:col-span-2">
             <span className="mb-3 block text-sm font-semibold text-slate-700">Appointments</span>
-            <div className="flex items-center justify-between rounded-[24px] border border-slate-300 bg-slate-50 px-4 py-4">
+
+            <div
+              className="flex items-center justify-between rounded-[24px] border border-slate-300 bg-slate-50"
+              style={smallContainerPaddingStyle}
+            >
               <div>
                 <div className="font-semibold text-[#002045]">Accept new appointments</div>
                 <div className="mt-1 text-sm text-slate-600">
                   Turn this off when you do not want pet owners to book this clinic.
                 </div>
               </div>
+
               <input
                 name="appointmentsEnabled"
                 type="checkbox"
@@ -293,7 +325,10 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
             </div>
           </label>
 
-          <div className="md:col-span-2 rounded-[24px] bg-slate-50 p-5">
+          <div
+            className="md:col-span-2 rounded-[24px] bg-slate-50"
+            style={containerPaddingStyle}
+          >
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="text-sm font-semibold text-[#002045]">Clinic location</div>
@@ -301,9 +336,10 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
                   Click directly on the map to save the clinic location.
                 </div>
               </div>
+
               <button
                 type="button"
-                className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                className={secondaryButtonClassName}
                 onClick={handleUseCurrentLocation}
                 disabled={locationLoading}
               >
@@ -323,7 +359,7 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
           <div className="md:col-span-2">
             <button
               type="submit"
-              className="w-full rounded-2xl bg-[#002045] px-5 py-4 text-base font-semibold text-white transition hover:bg-[#1A365D] disabled:cursor-not-allowed disabled:opacity-60"
+              className={`${primaryButtonClassName} w-full`}
               disabled={submitting}
             >
               {submitting
@@ -339,22 +375,31 @@ function VetForm({ initialData = null, isEdit = false, onSuccess }) {
       </form>
 
       <div className="space-y-6 xl:sticky xl:top-28 xl:self-start">
-        <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+        <div
+          className="rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]"
+          style={containerPaddingStyle}
+        >
           <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
             Location status
           </div>
+
           <div className="mt-4 font-display text-3xl font-bold text-[#002045]">
             {formData.latitude && formData.longitude ? 'Location selected' : 'Waiting for selection'}
           </div>
+
           <p className="mt-3 text-sm leading-7 text-slate-600">
             The clinic marker will stay synced with the selected map location.
           </p>
         </div>
 
-        <div className="rounded-[28px] border border-dashed border-slate-300 bg-slate-50 p-6">
+        <div
+          className="rounded-[28px] border border-dashed border-slate-300 bg-slate-50"
+          style={containerPaddingStyle}
+        >
           <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
             Good practice
           </div>
+
           <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
             <li>Use the exact clinic entrance location so users can navigate correctly.</li>
             <li>Keep working days and opening hours aligned with your real appointment schedule.</li>

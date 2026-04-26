@@ -13,6 +13,20 @@ import { bookAppointment, getAvailableSlots } from '../services/appointmentApi';
 const MAX_SLOT_LOOKAHEAD_DAYS = 14;
 const reasonOptions = ['General Checkup', 'Vaccination', 'Illness / Injury', 'Dental'];
 
+const containerPaddingStyle = {
+  paddingLeft: '2.5rem',
+  paddingRight: '2.5rem',
+  paddingTop: '2rem',
+  paddingBottom: '2rem',
+};
+
+const headerPaddingStyle = {
+  paddingLeft: '2.5rem',
+  paddingRight: '2.5rem',
+  paddingTop: '0.75rem',
+  paddingBottom: '0.75rem',
+};
+
 function BookAppointmentPage() {
   const { clinicId } = useParams();
   const navigate = useNavigate();
@@ -34,6 +48,7 @@ function BookAppointmentPage() {
   const [saving, setSaving] = useState(false);
 
   const appointmentsEnabled = clinic?.appointmentsEnabled !== false;
+
   const workingDaysLabel =
     Array.isArray(clinic?.workingDays) && clinic.workingDays.length
       ? clinic.workingDays.join(', ')
@@ -146,7 +161,9 @@ function BookAppointmentPage() {
         } else if (nextAvailable.slots.length === 0) {
           setSlotNotice('No appointment slots were found for this clinic in the next 14 days.');
         } else if (nextAvailable.dayOffset > 0) {
-          setSlotNotice(`Showing the next available date: ${formatFriendlyDate(nextAvailable.date)}.`);
+          setSlotNotice(
+            `Showing the next available date: ${formatFriendlyDate(nextAvailable.date)}.`
+          );
         } else {
           setSlotNotice('');
         }
@@ -189,6 +206,7 @@ function BookAppointmentPage() {
 
   const totalEstimate = useMemo(() => {
     const fee = Number(clinic?.consultationFee || 0);
+
     return {
       fee,
       total: Number(fee.toFixed(2)),
@@ -247,11 +265,26 @@ function BookAppointmentPage() {
       <SiteLayout
         compact
         backTo={`/vets/${clinicId}`}
-        backLabel="Back to clinic"
-        title="Book appointment"
-        subtitle="Loading clinic information..."
+        backLabel={
+          <span className="inline-block" style={headerPaddingStyle}>
+            Back to clinic
+          </span>
+        }
+        title={
+          <span className="block" style={headerPaddingStyle}>
+            Book appointment
+          </span>
+        }
+        subtitle={
+          <span className="block" style={headerPaddingStyle}>
+            Loading clinic information...
+          </span>
+        }
       >
-        <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-slate-600 shadow-sm">
+        <div
+          className="rounded-[28px] border border-slate-200 bg-white text-slate-600 shadow-sm"
+          style={containerPaddingStyle}
+        >
           Loading clinic...
         </div>
       </SiteLayout>
@@ -263,11 +296,26 @@ function BookAppointmentPage() {
       <SiteLayout
         compact
         backTo="/vets"
-        backLabel="Back to clinics"
-        title="Clinic not found"
-        subtitle="The selected clinic could not be loaded."
+        backLabel={
+          <span className="inline-block" style={headerPaddingStyle}>
+            Back to clinics
+          </span>
+        }
+        title={
+          <span className="block" style={headerPaddingStyle}>
+            Clinic not found
+          </span>
+        }
+        subtitle={
+          <span className="block" style={headerPaddingStyle}>
+            The selected clinic could not be loaded.
+          </span>
+        }
       >
-        <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-slate-600 shadow-sm">
+        <div
+          className="rounded-[28px] border border-slate-200 bg-white text-slate-600 shadow-sm"
+          style={containerPaddingStyle}
+        >
           Clinic not found.
         </div>
       </SiteLayout>
@@ -281,17 +329,38 @@ function BookAppointmentPage() {
     <SiteLayout
       compact
       backTo={`/vets/${clinicId}`}
-      backLabel="Back to clinic details"
-      eyebrow="Appointments"
-      title="Book an Appointment"
-      subtitle="Schedule a visit for your pet. Select a date, time, and provide the details your clinic needs before you arrive."
+      backLabel={
+        <span className="inline-block" style={headerPaddingStyle}>
+          Back to clinic details
+        </span>
+      }
+      eyebrow={
+        <span className="inline-block" style={headerPaddingStyle}>
+          Appointments
+        </span>
+      }
+      title={
+        <span className="block" style={headerPaddingStyle}>
+          Book an Appointment
+        </span>
+      }
+      subtitle={
+        <span className="block max-w-4xl" style={headerPaddingStyle}>
+          Schedule a visit for your pet. Select a date, time, and provide the details your clinic
+          needs before you arrive.
+        </span>
+      }
     >
       <div className="grid gap-8 xl:grid-cols-[1fr_380px]">
         <form id="booking-form" onSubmit={handleSubmit} className="space-y-6">
-          <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] lg:p-7">
+          <section
+            className="rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]"
+            style={containerPaddingStyle}
+          >
             <h2 className="font-display text-2xl font-bold text-[#002045] sm:text-3xl">
               Patient Details
             </h2>
+
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <label className="block">
                 <span className="mb-2 block text-sm font-semibold text-slate-700">Pet Name</span>
@@ -327,6 +396,7 @@ function BookAppointmentPage() {
               <div className="flex flex-wrap gap-3">
                 {reasonOptions.map((reason) => {
                   const isActive = formData.reason === reason;
+
                   return (
                     <button
                       key={reason}
@@ -347,7 +417,10 @@ function BookAppointmentPage() {
             </div>
           </section>
 
-          <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] lg:p-7">
+          <section
+            className="rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]"
+            style={containerPaddingStyle}
+          >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <h2 className="font-display text-2xl font-bold text-[#002045] sm:text-3xl">
@@ -357,6 +430,7 @@ function BookAppointmentPage() {
                   Choose the appointment date first, then select any available slot.
                 </p>
               </div>
+
               <label className="block max-w-xs">
                 <span className="mb-2 block text-sm font-semibold text-slate-700">
                   Appointment date
@@ -373,18 +447,23 @@ function BookAppointmentPage() {
               </label>
             </div>
 
-            <div className="mt-6 rounded-[24px] bg-slate-50 p-5">
+            <div
+              className="mt-6 rounded-[24px] bg-slate-50"
+              style={containerPaddingStyle}
+            >
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="font-semibold text-[#002045]">
                   Available slots for {formatFriendlyDate(formData.appointmentDate)}
                 </div>
                 {slotNotice ? <div className="text-sm text-slate-500">{slotNotice}</div> : null}
               </div>
+
               {!appointmentsEnabled ? (
                 <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
                   This clinic has turned off new appointments for now.
                 </div>
               ) : null}
+
               <div className="mt-4">
                 <AppointmentSlotPicker
                   slots={slots}
@@ -396,10 +475,14 @@ function BookAppointmentPage() {
             </div>
           </section>
 
-          <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] lg:p-7">
+          <section
+            className="rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]"
+            style={containerPaddingStyle}
+          >
             <h2 className="font-display text-2xl font-bold text-[#002045] sm:text-3xl">
               Symptoms & Notes
             </h2>
+
             <label className="mt-5 block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">
                 Additional notes for the vet
@@ -418,7 +501,7 @@ function BookAppointmentPage() {
 
         <aside className="space-y-6 xl:sticky xl:top-28 xl:self-start">
           <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-            <div className="p-6">
+            <div style={containerPaddingStyle}>
               <div className="flex items-start gap-4">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#DDEAFE] text-2xl font-bold text-[#002045]">
                   V
@@ -433,7 +516,7 @@ function BookAppointmentPage() {
               </div>
             </div>
 
-            <div className="border-t border-slate-200 bg-slate-50 p-6">
+            <div className="border-t border-slate-200 bg-slate-50" style={containerPaddingStyle}>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-100 text-xs font-bold uppercase tracking-[0.14em] text-teal-700">
@@ -451,6 +534,7 @@ function BookAppointmentPage() {
                     <div className="mt-1 text-xs text-slate-500">{workingDaysLabel}</div>
                   </div>
                 </div>
+
                 <div className="flex items-start gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#DDEAFE] text-xs font-bold uppercase tracking-[0.14em] text-[#002045]">
                     Pet
@@ -467,20 +551,23 @@ function BookAppointmentPage() {
               </div>
             </div>
 
-            <div className="border-t border-slate-200 p-6">
+            <div className="border-t border-slate-200" style={containerPaddingStyle}>
               <div className="flex items-center justify-between py-2 text-slate-600">
                 <span>Consultation Fee</span>
                 <span className="font-semibold text-[#002045]">{formattedConsultationFee}</span>
               </div>
+
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
                 <span className="text-2xl font-bold text-[#002045]">Total Estimate</span>
                 <span className="text-3xl font-extrabold text-[#002045] sm:text-4xl">
                   {formattedTotalEstimate}
                 </span>
               </div>
+
               <p className="mt-2 text-sm text-slate-500">
                 Payment is collected at the clinic after your visit.
               </p>
+
               <button
                 type="submit"
                 form="booking-form"
@@ -506,7 +593,10 @@ function BookAppointmentPage() {
                 referrerPolicy="no-referrer-when-downgrade"
               />
             ) : (
-              <div className="flex h-72 items-center justify-center bg-slate-100 text-slate-500">
+              <div
+                className="flex h-72 items-center justify-center bg-slate-100 text-center text-slate-500"
+                style={containerPaddingStyle}
+              >
                 Location preview is not available for this clinic.
               </div>
             )}

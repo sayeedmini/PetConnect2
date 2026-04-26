@@ -9,6 +9,27 @@ import {
   getMyAppointments,
 } from '../services/appointmentApi';
 
+const containerPaddingStyle = {
+  paddingLeft: '2.5rem',
+  paddingRight: '2.5rem',
+  paddingTop: '2rem',
+  paddingBottom: '2rem',
+};
+
+const smallContainerPaddingStyle = {
+  paddingLeft: '1.5rem',
+  paddingRight: '1.5rem',
+  paddingTop: '1.25rem',
+  paddingBottom: '1.25rem',
+};
+
+const headerPaddingStyle = {
+  paddingLeft: '2.5rem',
+  paddingRight: '2.5rem',
+  paddingTop: '0.75rem',
+  paddingBottom: '0.75rem',
+};
+
 function StatusBadge({ status }) {
   const styles = {
     scheduled: 'bg-amber-50 text-amber-700 ring-amber-200',
@@ -29,10 +50,14 @@ function StatusBadge({ status }) {
 
 function StatCard({ label, value, tone }) {
   return (
-    <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_50px_rgba(15,23,42,0.05)]">
+    <div
+      className="rounded-[28px] border border-slate-200 bg-white shadow-[0_16px_50px_rgba(15,23,42,0.05)]"
+      style={containerPaddingStyle}
+    >
       <div className={`inline-flex rounded-2xl px-4 py-2 text-sm font-semibold ${tone}`}>
         {label}
       </div>
+
       <div className="mt-5 font-display text-4xl font-extrabold text-[#002045] sm:text-5xl">
         {value}
       </div>
@@ -49,6 +74,7 @@ function MyAppointmentsPage() {
 
   const fetchAppointments = useCallback(async (status = '') => {
     setLoading(true);
+
     try {
       const response = await getMyAppointments(status);
       setAppointments(response.data || []);
@@ -72,6 +98,7 @@ function MyAppointmentsPage() {
 
   const handleCancel = async (id) => {
     if (!window.confirm('Cancel this appointment?')) return;
+
     try {
       await cancelAppointment(id);
       alert('Appointment cancelled');
@@ -96,6 +123,7 @@ function MyAppointmentsPage() {
   const scheduledCount = appointments.filter((item) => item.status === 'scheduled').length;
   const completedCount = appointments.filter((item) => item.status === 'completed').length;
   const cancelledCount = appointments.filter((item) => item.status === 'cancelled').length;
+
   const nextAppointment = useMemo(
     () => appointments.find((item) => item.status === 'scheduled') || null,
     [appointments]
@@ -103,24 +131,35 @@ function MyAppointmentsPage() {
 
   return (
     <SiteLayout
-      eyebrow="Appointment dashboard"
-      title={currentUser?.role === 'vet' ? 'Clinic schedule overview' : 'Your appointment timeline'}
+      eyebrow={
+        <span className="inline-block" style={headerPaddingStyle}>
+          Appointment dashboard
+        </span>
+      }
+      title={
+        <span className="block" style={headerPaddingStyle}>
+          {currentUser?.role === 'vet' ? 'Clinic schedule overview' : 'Your appointment timeline'}
+        </span>
+      }
       subtitle={
-        currentUser?.role === 'vet'
-          ? 'Manage scheduled visits, complete consultations, and open prescription workspaces.'
-          : 'Track upcoming visits, manage rescheduling, and jump straight into prescription history.'
+        <span className="block max-w-4xl" style={headerPaddingStyle}>
+          {currentUser?.role === 'vet'
+            ? 'Manage scheduled visits, complete consultations, and open prescription workspaces.'
+            : 'Track upcoming visits, manage rescheduling, and jump straight into prescription history.'}
+        </span>
       }
       actions={
         <>
           <Link
             to="/prescriptions"
-            className="rounded-xl border border-teal-300 bg-teal-50 px-4 py-2.5 text-sm font-semibold text-teal-800 transition hover:bg-teal-100"
+            className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-teal-300 bg-teal-50 px-5 py-3 text-sm font-bold text-teal-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-teal-100 hover:shadow-lg"
           >
             View prescriptions
           </Link>
+
           <Link
             to="/vets"
-            className="rounded-xl bg-[#002045] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1A365D]"
+            className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-[#002045] bg-[#002045] px-5 py-3 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-[#1A365D] hover:shadow-xl"
           >
             Browse clinics
           </Link>
@@ -135,11 +174,13 @@ function MyAppointmentsPage() {
               value={scheduledCount}
               tone="bg-amber-50 text-amber-700 ring-1 ring-amber-200"
             />
+
             <StatCard
               label="Completed"
               value={completedCount}
               tone="bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
             />
+
             <StatCard
               label="Cancelled"
               value={cancelledCount}
@@ -147,20 +188,26 @@ function MyAppointmentsPage() {
             />
           </div>
 
-          <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_50px_rgba(15,23,42,0.05)]">
+          <div
+            className="rounded-[28px] border border-slate-200 bg-white shadow-[0_16px_50px_rgba(15,23,42,0.05)]"
+            style={containerPaddingStyle}
+          >
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="font-display text-3xl font-bold text-[#002045]">
                   Recent appointments
                 </h2>
+
                 <p className="mt-2 text-sm text-slate-600">
                   Filter and manage every appointment from one clean view.
                 </p>
               </div>
+
               <label className="block min-w-[220px]">
                 <span className="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
                   Status filter
                 </span>
+
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
@@ -175,11 +222,17 @@ function MyAppointmentsPage() {
             </div>
 
             {loading ? (
-              <div className="mt-6 rounded-2xl bg-slate-50 p-8 text-center text-slate-500">
+              <div
+                className="mt-6 rounded-2xl bg-slate-50 text-center text-slate-500"
+                style={containerPaddingStyle}
+              >
                 Loading appointments...
               </div>
             ) : appointments.length === 0 ? (
-              <div className="mt-6 rounded-2xl bg-slate-50 p-8 text-center text-slate-500">
+              <div
+                className="mt-6 rounded-2xl bg-slate-50 text-center text-slate-500"
+                style={containerPaddingStyle}
+              >
                 No appointments found.
               </div>
             ) : (
@@ -188,12 +241,15 @@ function MyAppointmentsPage() {
                   const canReschedule =
                     appointment.status === 'scheduled' &&
                     ['petOwner', 'admin'].includes(currentUser?.role);
+
                   const canComplete =
                     appointment.status === 'scheduled' &&
                     ['vet', 'admin'].includes(currentUser?.role);
+
                   const canManagePrescription =
                     appointment.status === 'completed' &&
                     ['vet', 'admin', 'petOwner'].includes(currentUser?.role);
+
                   const canReviewClinic =
                     appointment.status === 'completed' &&
                     ['petOwner', 'admin'].includes(currentUser?.role);
@@ -201,7 +257,8 @@ function MyAppointmentsPage() {
                   return (
                     <article
                       key={appointment._id}
-                      className="rounded-[24px] border border-slate-200 bg-slate-50 p-5"
+                      className="rounded-[24px] border border-slate-200 bg-slate-50"
+                      style={containerPaddingStyle}
                     >
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div>
@@ -209,33 +266,49 @@ function MyAppointmentsPage() {
                             <h3 className="font-display text-2xl font-bold text-[#002045]">
                               {appointment.clinic?.clinicName || 'Clinic not available'}
                             </h3>
+
                             <StatusBadge status={appointment.status} />
                           </div>
+
                           <p className="mt-2 text-sm text-slate-600">
                             Pet: {appointment.petName} • {appointment.petType || 'Not specified'}
                           </p>
                         </div>
-                        <div className="rounded-2xl bg-white px-4 py-3 text-sm text-slate-600 ring-1 ring-slate-200">
+
+                        <div
+                          className="rounded-2xl bg-white text-sm text-slate-600 ring-1 ring-slate-200"
+                          style={smallContainerPaddingStyle}
+                        >
                           <div className="font-semibold text-[#002045]">
                             {formatFriendlyDate(appointment.appointmentDate)}
                           </div>
+
                           <div>{appointment.slotLabel}</div>
                         </div>
                       </div>
 
                       <div className="mt-5 grid gap-3 md:grid-cols-2">
-                        <div className="rounded-2xl bg-white p-4">
+                        <div
+                          className="rounded-2xl bg-white"
+                          style={smallContainerPaddingStyle}
+                        >
                           <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                             Reason
                           </div>
+
                           <div className="mt-2 text-sm font-medium text-slate-700">
                             {appointment.reason || 'Not specified'}
                           </div>
                         </div>
-                        <div className="rounded-2xl bg-white p-4">
+
+                        <div
+                          className="rounded-2xl bg-white"
+                          style={smallContainerPaddingStyle}
+                        >
                           <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                             Reminder
                           </div>
+
                           <div className="mt-2 text-sm font-medium text-slate-700">
                             {appointment.reminderAt
                               ? new Date(appointment.reminderAt).toLocaleString()
@@ -247,33 +320,36 @@ function MyAppointmentsPage() {
                       <div className="mt-5 flex flex-wrap gap-3">
                         {canReschedule && (
                           <Link
-                            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-[#002045] transition hover:border-slate-400 hover:bg-slate-100"
+                            className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-slate-300 bg-white px-5 py-3 text-sm font-bold text-[#002045] shadow-sm transition hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-100 hover:shadow-lg"
                             to={`/appointments/${appointment._id}/reschedule`}
                           >
                             Reschedule
                           </Link>
                         )}
+
                         {appointment.status === 'scheduled' && (
                           <button
                             type="button"
-                            className="rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-700"
+                            className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-rose-600 bg-rose-600 px-5 py-3 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-rose-700 hover:shadow-lg"
                             onClick={() => handleCancel(appointment._id)}
                           >
                             Cancel
                           </button>
                         )}
+
                         {canComplete && (
                           <button
                             type="button"
-                            className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                            className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-emerald-600 bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg"
                             onClick={() => handleComplete(appointment._id)}
                           >
                             Mark completed
                           </button>
                         )}
+
                         {canManagePrescription && (
                           <Link
-                            className="rounded-xl bg-[#002045] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1A365D]"
+                            className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-[#002045] bg-[#002045] px-5 py-3 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-[#1A365D] hover:shadow-lg"
                             to={`/appointments/${appointment._id}/prescription`}
                           >
                             {['vet', 'admin'].includes(currentUser?.role)
@@ -281,17 +357,19 @@ function MyAppointmentsPage() {
                               : 'View prescription'}
                           </Link>
                         )}
+
                         {canReviewClinic && (
                           <Link
-                            className="rounded-xl border border-teal-300 bg-teal-50 px-4 py-2.5 text-sm font-semibold text-teal-800 transition hover:bg-teal-100"
+                            className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-teal-300 bg-teal-50 px-5 py-3 text-sm font-bold text-teal-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-teal-100 hover:shadow-lg"
                             to={`/vets/${appointment.clinic?._id}`}
                           >
                             Review clinic
                           </Link>
                         )}
+
                         {appointment.calendarSync?.addToCalendarUrl && (
                           <a
-                            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+                            className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:shadow-lg"
                             href={appointment.calendarSync.addToCalendarUrl}
                             target="_blank"
                             rel="noreferrer"
@@ -309,21 +387,32 @@ function MyAppointmentsPage() {
         </div>
 
         <aside className="space-y-6 xl:sticky xl:top-28 xl:self-start">
-          <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_50px_rgba(15,23,42,0.05)]">
+          <div
+            className="rounded-[28px] border border-slate-200 bg-white shadow-[0_16px_50px_rgba(15,23,42,0.05)]"
+            style={containerPaddingStyle}
+          >
             <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
               Next up
             </div>
+
             {nextAppointment ? (
               <>
                 <h3 className="mt-4 font-display text-3xl font-bold text-[#002045]">
                   {nextAppointment.petName}
                 </h3>
+
                 <p className="mt-2 text-slate-600">{nextAppointment.clinic?.clinicName}</p>
-                <div className="mt-6 rounded-[24px] bg-slate-50 p-5">
+
+                <div
+                  className="mt-6 rounded-[24px] bg-slate-50"
+                  style={smallContainerPaddingStyle}
+                >
                   <div className="text-sm font-semibold text-[#002045]">
                     {formatFriendlyDate(nextAppointment.appointmentDate)}
                   </div>
+
                   <div className="mt-1 text-slate-600">{nextAppointment.slotLabel}</div>
+
                   <div className="mt-4 text-sm text-slate-500">
                     {nextAppointment.reason || 'Consultation'}
                   </div>
@@ -334,19 +423,24 @@ function MyAppointmentsPage() {
             )}
           </div>
 
-          <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_50px_rgba(15,23,42,0.05)]">
+          <div
+            className="rounded-[28px] border border-slate-200 bg-white shadow-[0_16px_50px_rgba(15,23,42,0.05)]"
+            style={containerPaddingStyle}
+          >
             <div className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
               Quick actions
             </div>
+
             <div className="mt-5 grid gap-3">
               <Link
-                className="rounded-2xl bg-[#002045] px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-[#1A365D]"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-[#002045] bg-[#002045] px-5 py-3 text-center text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-[#1A365D] hover:shadow-lg"
                 to="/vets"
               >
                 Book new appointment
               </Link>
+
               <Link
-                className="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-slate-300 bg-white px-5 py-3 text-center text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:shadow-lg"
                 to="/prescriptions"
               >
                 Open prescription history
